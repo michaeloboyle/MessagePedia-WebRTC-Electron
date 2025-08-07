@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MessagePedia WebRTC</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>MessagePedia WebRTC + Electron</h1>
+            <div id="connection-status">Disconnected</div>
+        </header>
+        
+        <main>
+            <div id="topics-sidebar">
+                <h3>Topics</h3>
+                <!-- TODO: Topic list -->
+            </div>
+            
+            <div id="messages-area">
+                <div id="messages"></div>
+                <div id="message-input">
+                    <input type="text" placeholder="Type a message..." />
+                    <button>Send</button>
+                </div>
+            </div>
+            
+            <div id="peers-sidebar">
+                <h3>Connected Peers</h3>
+                <!-- TODO: Peer list -->
+            </div>
+        </main>
+    </div>
+    
+    <script src="renderer.js"></script>
+</body>
+</html>

@@ -1,0 +1,80 @@
+/* TODO: MessagePedia UI styling */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f5f5f5;
+}
+
+#app {
+    display: grid;
+    grid-template-rows: 60px 1fr;
+    height: 100vh;
+}
+
+header {
+    background: #2c3e50;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+}
+
+main {
+    display: grid;
+    grid-template-columns: 250px 1fr 200px;
+    height: 100%;
+}
+
+#topics-sidebar, #peers-sidebar {
+    background: #ecf0f1;
+    padding: 20px;
+    border-right: 1px solid #bdc3c7;
+}
+
+#messages-area {
+    display: grid;
+    grid-template-rows: 1fr 60px;
+    padding: 20px;
+}
+
+#messages {
+    overflow-y: auto;
+    border: 1px solid #bdc3c7;
+    background: white;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+#message-input {
+    display: flex;
+    gap: 10px;
+}
+
+#message-input input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #bdc3c7;
+    border-radius: 4px;
+}
+
+#message-input button {
+    padding: 10px 20px;
+    background: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#connection-status {
+    padding: 5px 10px;
+    border-radius: 4px;
+    background: #e74c3c;
+    font-size: 12px;
+}
