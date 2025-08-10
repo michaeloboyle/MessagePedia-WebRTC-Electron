@@ -1,2 +1,2 @@
-# Security & Authentication Development
-This work tree is for security and authentication features
+# Performance Optimization Development
+This work tree is for performance optimization and benchmarking
