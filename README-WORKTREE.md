@@ -1,2 +1,2 @@
-# Signaling Server Development
-This work tree is for WebRTC signaling server implementation
+# Integration Tests Development
+This work tree is for comprehensive integration testing
