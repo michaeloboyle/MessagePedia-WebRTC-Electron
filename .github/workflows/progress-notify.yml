@@ -1,0 +1,35 @@
+name: Progress Notifications
+
+on:
+  push:
+    branches: [main, feature/*]
+  issues:
+    types: [closed]
+  pull_request:
+    types: [opened, closed]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Update Progress
+        run: |
+          echo "📊 Build Progress Update"
+          echo "========================"
+          echo "Commit: ${{ github.sha }}"
+          echo "Branch: ${{ github.ref }}"
+          echo "Time: $(date)"
+          
+      - name: Create Progress Comment
+        if: github.event_name == 'issues' && github.event.action == 'closed'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '✅ Task completed! Autonomous development continuing...'
+            })
