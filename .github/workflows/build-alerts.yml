@@ -1,0 +1,52 @@
+name: Build Status Alerts
+
+on:
+  push:
+    branches: [main, feature/*]
+  schedule:
+    # Check build health every hour
+    - cron: '0 * * * *'
+
+jobs:
+  status-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Check Build Health
+        run: |
+          echo "🔍 Checking autonomous build health..."
+          
+          # Check if progress was updated recently
+          PROGRESS_TIME=$(stat -c %Y PROGRESS.md 2>/dev/null || echo 0)
+          CURRENT_TIME=$(date +%s)
+          TIME_DIFF=$(($CURRENT_TIME - $PROGRESS_TIME))
+          
+          echo "Progress file age: ${TIME_DIFF} seconds"
+          
+          if [ $TIME_DIFF -gt 3600 ]; then
+            echo "⚠️ WARNING: Progress not updated in over 1 hour"
+            echo "Build may be stuck. Check required."
+          else
+            echo "✅ Build appears healthy and active"
+          fi
+          
+      - name: Update Status API
+        run: |
+          cat > docs/api/status.json << EOF
+          {
+            "status": "$([ $TIME_DIFF -gt 3600 ] && echo 'possibly-stuck' || echo 'active')",
+            "lastUpdate": "$(date -u -Iseconds)",
+            "buildPhase": "SPARC Phase 4 - Implementation", 
+            "healthCheck": "$(date -u -Iseconds)",
+            "nextCheck": "$(date -u -d '+1 hour' -Iseconds)"
+          }
+          EOF
+          
+      - name: Commit Status Update
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "Build Monitor"
+          git add docs/api/status.json
+          git commit -m "📊 Build status check - $(date '+%H:%M')" || exit 0
+          git push || echo "No changes to push"

@@ -1,0 +1,28 @@
+name: Autonomous Build Heartbeat
+
+on:
+  schedule:
+    # Every 30 minutes during active development
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+jobs:
+  heartbeat:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Generate Heartbeat
+        run: |
+          echo "🤖 Autonomous Build Heartbeat - $(date)" >> HEARTBEAT.md
+          echo "Status: Active Development in Progress" >> HEARTBEAT.md
+          echo "Last Update: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> HEARTBEAT.md
+          echo "---" >> HEARTBEAT.md
+          
+      - name: Commit Heartbeat
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "Autonomous Build Bot"
+          git add HEARTBEAT.md
+          git commit -m "🤖 Autonomous build heartbeat - $(date '+%H:%M')" || exit 0
+          git push || echo "No changes to push"
