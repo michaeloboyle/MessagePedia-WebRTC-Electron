@@ -24,16 +24,32 @@ This project replaces the legacy JXTA-based MessagePedia implementation with a m
 
 ## 📁 Project Structure
 
-```
-MessagePedia-WebRTC-Electron/
-├── docs/                    # Architecture and technical documentation
-├── src/
-│   ├── main/               # Electron main process
-│   ├── renderer/           # Electron renderer process (UI)
-│   └── signaling-server/   # Node.js signaling server
-├── tests/                  # Test suites
-├── scripts/                # Build and deployment scripts
-└── assets/                 # Static assets and resources
+```mermaid
+block-beta
+  columns 3
+  
+  A["🏠 MessagePedia-WebRTC-Electron"] 
+  
+  A --> B["📖 docs/"]
+  A --> C["💻 src/"]  
+  A --> D["🧪 tests/"]
+  
+  B --> E["ARCHITECTURE.md<br/>System design & WebRTC specs"]
+  B --> F["SPARC-STRATEGY.md<br/>AI swarm methodology"]
+  B --> G["API/<br/>Technical references"]
+  
+  C --> H["⚡ main/<br/>Electron main process"]
+  C --> I["🎨 renderer/<br/>UI & React components"]
+  C --> J["📡 signaling-server/<br/>Node.js P2P coordination"]
+  
+  D --> K["🔬 unit/<br/>Component tests"]
+  D --> L["🔗 integration/<br/>System tests"]
+  D --> M["📊 performance/<br/>Benchmarks"]
+  
+  style A fill:#4CAF50,color:#fff
+  style B fill:#2196F3,color:#fff
+  style C fill:#FF9800,color:#fff
+  style D fill:#9C27B0,color:#fff
 ```
 
 ## 🔧 Development Setup
@@ -68,36 +84,61 @@ This project uses the **SPARC methodology** enhanced by AI swarm collaboration:
 
 ## 📋 Implementation Roadmap
 
-### Phase 1: Core Infrastructure (Weeks 1-4)
-- [ ] Signaling server setup (Node.js + Socket.io)
-- [ ] Electron app skeleton
-- [ ] Basic WebRTC peer connection
-- [ ] Simple file transfer proof of concept
+```mermaid
+gantt
+    title MessagePedia WebRTC Implementation Timeline
+    dateFormat  YYYY-MM-DD
+    
+    section 🏗️ Phase 1: Core Infrastructure
+    Signaling server setup (Node.js + Socket.io)     :done,    phase1a, 2025-08-11, 1w
+    Electron app skeleton                             :done,    phase1b, 2025-08-18, 1w
+    Basic WebRTC peer connection                      :active,  phase1c, 2025-08-25, 1w
+    Simple file transfer proof of concept            :         phase1d, 2025-09-01, 1w
 
-### Phase 2: MessagePedia Features (Weeks 5-8)  
-- [ ] Topic/room system
-- [ ] User profiles & presence
-- [ ] Large file transfer with progress
-- [ ] Local storage persistence
+    section 📱 Phase 2: MessagePedia Features
+    Topic/room system                                 :         phase2a, after phase1d, 1w
+    User profiles & presence                          :         phase2b, after phase2a, 1w
+    Large file transfer with progress                 :         phase2c, after phase2b, 1w
+    Local storage persistence                         :         phase2d, after phase2c, 1w
 
-### Phase 3: Advanced Features (Weeks 9-12)
-- [ ] Multiple device sync
-- [ ] Offline message queue
-- [ ] File preview/thumbnails  
-- [ ] Voice/video calls (optional)
+    section 🚀 Phase 3: Advanced Features
+    Multiple device sync                              :         phase3a, after phase2d, 1w
+    Offline message queue                             :         phase3b, after phase3a, 1w
+    File preview/thumbnails                           :         phase3c, after phase3b, 1w
+    Voice/video calls (optional)                     :         phase3d, after phase3c, 1w
 
-### Phase 4: Production Ready (Weeks 13-16)
-- [ ] Error handling & recovery
-- [ ] Performance optimization
-- [ ] Security hardening
-- [ ] Auto-updater integration
+    section 🎯 Phase 4: Production Ready
+    Error handling & recovery                         :         phase4a, after phase3d, 1w
+    Performance optimization                          :         phase4b, after phase4a, 1w
+    Security hardening                                :         phase4c, after phase4b, 1w
+    Auto-updater integration                          :         phase4d, after phase4c, 1w
+```
+
+### 📊 Current Status
+- **✅ Phase 1**: 75% Complete (WebRTC connection in progress)
+- **🔄 Phase 2**: Planning stage
+- **📋 Phase 3**: Requirements gathering
+- **🎯 Phase 4**: Architecture design
 
 ## 📚 Documentation
 
-- [Architecture Overview](docs/ARCHITECTURE.md)
-- [SPARC Implementation Strategy](docs/SPARC-STRATEGY.md)
-- [API Documentation](docs/api/) _(coming soon)_
-- [Deployment Guide](docs/deployment/) _(coming soon)_
+### **Core Architecture & Strategy**
+- [🏗️ Architecture Overview](docs/ARCHITECTURE.md) - System design with Mermaid visualizations
+- [🤖 SPARC Implementation Strategy](docs/SPARC-STRATEGY.md) - AI swarm methodology with state diagrams
+- [📊 Performance Analysis](docs/PERFORMANCE-ANALYSIS.md) - JXTA vs WebRTC metrics with charts
+- [🔗 WebRTC Connection Flow](docs/WEBRTC-CONNECTION-FLOW.md) - Detailed P2P communication flows
+
+### **Visual Documentation Features**
+- **📈 Interactive Diagrams**: Gantt charts, flowcharts, sequence diagrams  
+- **🎯 Performance Metrics**: XY charts, quadrant analysis, success rate tracking
+- **🏛️ System Architecture**: Component diagrams, topology visualizations
+- **⚡ Real-time Workflows**: State machines, timeline tracking, process flows
+
+### **Coming Soon**
+- [API Documentation](docs/api/) - Interactive API reference
+- [Deployment Guide](docs/deployment/) - Production deployment strategies
+- [Testing Framework](docs/testing/) - Automated testing documentation
+- [Security Analysis](docs/security/) - Comprehensive security assessment
 
 ## 🤝 Contributing
 
