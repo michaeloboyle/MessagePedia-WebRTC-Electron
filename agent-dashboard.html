@@ -1243,20 +1243,30 @@
                             <div style="margin-bottom: 8px;">
                                 <strong style="color: #4a9eff;">Issue ${task.githubIssue}</strong>: ${task.description.split(':')[1]?.trim() || 'WebRTC Implementation'}
                             </div>
-                            <div style="font-size: 12px; color: #aaa; margin-bottom: 10px;">
-                                📍 Full URL for context and linking:
-                            </div>
-                            <div style="background: #222; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px; word-break: break-all;">
+                            <div style="margin-top: 12px;">
                                 <a href="https://github.com/michaeloboyle/MessagePedia-WebRTC-Electron/issues/${task.githubIssue.replace('#', '')}" 
                                    target="_blank" 
-                                   style="color: #4CAF50; text-decoration: none;"
-                                   onmouseover="this.style.textDecoration='underline'"
-                                   onmouseout="this.style.textDecoration='none'">
-                                    https://github.com/michaeloboyle/MessagePedia-WebRTC-Electron/issues/${task.githubIssue.replace('#', '')}
+                                   style="
+                                       display: block;
+                                       padding: 12px 16px;
+                                       background: linear-gradient(135deg, #1a1a1a, #222);
+                                       border: 1px solid #333;
+                                       border-radius: 6px;
+                                       color: #4CAF50;
+                                       text-decoration: none;
+                                       font-family: 'SF Mono', 'Monaco', monospace;
+                                       font-size: 11px;
+                                       font-weight: 500;
+                                       transition: all 0.15s ease;
+                                       box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+                                   "
+                                   onmouseover="this.style.background='linear-gradient(135deg, #2a2a2a, #333)'; this.style.borderColor='#4CAF50'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 2px 8px rgba(76, 175, 80, 0.1)';"
+                                   onmouseout="this.style.background='linear-gradient(135deg, #1a1a1a, #222)'; this.style.borderColor='#333'; this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.2)';">
+                                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                                        <span>github.com/.../${task.githubIssue.replace('#', '')}</span>
+                                        <span style="color: #666; font-size: 10px;">↗</span>
+                                    </div>
                                 </a>
-                            </div>
-                            <div style="margin-top: 8px; font-size: 11px; color: #666;">
-                                🔗 Click to open in new tab • View full issue context, requirements and discussion
                             </div>
                         </div>
                     </div>
@@ -1725,20 +1735,30 @@ Defines how MessagePedia peers discover and connect to each other in a decentral
                                 <div style="margin-bottom: 8px;">
                                     <strong style="color: #4a9eff;">Issue #${entry.details.githubIssue}</strong>: WebRTC P2P Connection Implementation
                                 </div>
-                                <div style="font-size: 12px; color: #aaa; margin-bottom: 10px;">
-                                    📍 Full URL for context and linking:
-                                </div>
-                                <div style="background: #222; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px; word-break: break-all;">
+                                <div style="margin-top: 12px;">
                                     <a href="https://github.com/michaeloboyle/MessagePedia-WebRTC-Electron/issues/${entry.details.githubIssue}" 
                                        target="_blank" 
-                                       style="color: #4CAF50; text-decoration: none; hover: text-decoration: underline;"
-                                       onmouseover="this.style.textDecoration='underline'"
-                                       onmouseout="this.style.textDecoration='none'">
-                                        https://github.com/michaeloboyle/MessagePedia-WebRTC-Electron/issues/${entry.details.githubIssue}
+                                       style="
+                                           display: block;
+                                           padding: 12px 16px;
+                                           background: linear-gradient(135deg, #1a1a1a, #222);
+                                           border: 1px solid #333;
+                                           border-radius: 6px;
+                                           color: #4CAF50;
+                                           text-decoration: none;
+                                           font-family: 'SF Mono', 'Monaco', monospace;
+                                           font-size: 11px;
+                                           font-weight: 500;
+                                           transition: all 0.15s ease;
+                                           box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+                                       "
+                                       onmouseover="this.style.background='linear-gradient(135deg, #2a2a2a, #333)'; this.style.borderColor='#4CAF50'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 2px 8px rgba(76, 175, 80, 0.1)';"
+                                       onmouseout="this.style.background='linear-gradient(135deg, #1a1a1a, #222)'; this.style.borderColor='#333'; this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.2)';">
+                                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                                            <span>github.com/.../${entry.details.githubIssue}</span>
+                                            <span style="color: #666; font-size: 10px;">↗</span>
+                                        </div>
                                     </a>
-                                </div>
-                                <div style="margin-top: 8px; font-size: 11px; color: #666;">
-                                    🔗 Click to open in new tab • View full issue context and discussion
                                 </div>
                             </div>
                         </div>
