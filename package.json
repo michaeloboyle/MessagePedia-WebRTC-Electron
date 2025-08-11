@@ -11,9 +11,17 @@
     "test": "jest --coverage",
     "test:watch": "jest --watch",
     "build": "webpack --mode production",
-    "lint": "eslint src/ tests/"
+    "lint": "eslint src/ tests/",
+    "db:init": "node -e \"const db = require('./src/database/DatabaseManager'); new db().initialize().then(() => console.log('Database initialized'))\"",
+    "db:stats": "node -e \"const db = require('./src/database/DatabaseManager'); const dbManager = new db(); dbManager.initialize().then(async () => { console.log(await dbManager.getStats()); dbManager.close(); })\""
   },
-  "keywords": ["webrtc", "p2p", "messaging", "electron", "messagepedia"],
+  "keywords": [
+    "webrtc",
+    "p2p",
+    "messaging",
+    "electron",
+    "messagepedia"
+  ],
   "author": "Michael O'Boyle <michael@oboyle.co>",
   "license": "MIT",
   "devDependencies": {
@@ -25,8 +33,9 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
+    "events": "^3.3.0",
     "socket.io-client": "^4.7.4",
-    "uuid": "^9.0.1",
-    "events": "^3.3.0"
+    "sqlite3": "^5.1.7",
+    "uuid": "^9.0.1"
   }
 }

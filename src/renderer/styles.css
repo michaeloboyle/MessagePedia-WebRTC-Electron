@@ -77,4 +77,100 @@ main {
     border-radius: 4px;
     background: #e74c3c;
     font-size: 12px;
+    transition: all 0.3s ease;
+}
+
+/* Peer and Topic Items */
+.peer-item, .topic-item {
+    background: white;
+    padding: 12px;
+    margin: 8px 0;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    transition: all 0.2s ease;
+}
+
+.peer-item:hover, .topic-item:hover {
+    background: #f8f9fa;
+    border-color: #3498db;
+    cursor: pointer;
+}
+
+.topic-item.selected {
+    background: #e3f2fd;
+    border-color: #2196f3;
+}
+
+.peer-name, .topic-name {
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.peer-status {
+    font-size: 12px;
+    margin-bottom: 2px;
+}
+
+.peer-status.online {
+    color: #27ae60;
+}
+
+.peer-status.offline {
+    color: #e74c3c;
+}
+
+.peer-reputation, .topic-members {
+    font-size: 11px;
+    color: #7f8c8d;
+}
+
+/* Messages */
+.message {
+    background: white;
+    padding: 12px;
+    margin: 8px 0;
+    border-radius: 8px;
+    border-left: 4px solid #3498db;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.message-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.message-header strong {
+    color: #2c3e50;
+    font-size: 14px;
+}
+
+.timestamp {
+    font-size: 11px;
+    color: #95a5a6;
+}
+
+.message-content {
+    color: #34495e;
+    line-height: 1.4;
+}
+
+/* Scrollbar styling */
+#messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+#messages::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+#messages::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+#messages::-webkit-scrollbar-thumb:hover {
+    background: #a1a1a1;
 }
