@@ -127,12 +127,19 @@ gantt
 - [🤖 SPARC Implementation Strategy](docs/SPARC-STRATEGY.md) - AI swarm methodology with state diagrams
 - [📊 Performance Analysis](docs/PERFORMANCE-ANALYSIS.md) - JXTA vs WebRTC metrics with charts
 - [🔗 WebRTC Connection Flow](docs/WEBRTC-CONNECTION-FLOW.md) - Detailed P2P communication flows
+- [🔐 Authentication Strategy](docs/AUTHENTICATION-STRATEGY.md) - Sign in with Apple OAuth integration
 
 ### **Visual Documentation Features**
 - **📈 Interactive Diagrams**: Gantt charts, flowcharts, sequence diagrams  
 - **🎯 Performance Metrics**: XY charts, quadrant analysis, success rate tracking
 - **🏛️ System Architecture**: Component diagrams, topology visualizations
 - **⚡ Real-time Workflows**: State machines, timeline tracking, process flows
+
+### **Authentication & Security**
+- **🍎 Sign in with Apple**: Privacy-focused OAuth 2.0 authentication
+- **🔒 Secure Storage**: Electron safeStorage for credential protection
+- **🛡️ JWT Validation**: Apple identity token verification
+- **🔐 End-to-End Encryption**: DTLS for all WebRTC communications
 
 ### **Coming Soon**
 - [API Documentation](docs/api/) - Interactive API reference
