@@ -1024,7 +1024,17 @@
                         <div style="display: flex; align-items: center;">
                             <div class="task-priority priority ${task.priority}">${task.priority}</div>
                             <div class="task-status-badge status ${task.status}">${task.status.replace('_', ' ')}</div>
-                            ${task.githubIssue ? `<a href="#" class="github-link">${task.githubIssue}</a>` : ''}
+                            ${task.githubIssue ? `
+                                <a href="https://github.com/michaeloboyle/MessagePedia-WebRTC-Electron/issues/${task.githubIssue}" 
+                                   target="_blank" 
+                                   class="github-link" 
+                                   title="https://github.com/michaeloboyle/MessagePedia-WebRTC-Electron/issues/${task.githubIssue}"
+                                   style="color: #4CAF50; text-decoration: none; font-size: 11px; margin-left: 8px;"
+                                   onmouseover="this.style.textDecoration='underline'"
+                                   onmouseout="this.style.textDecoration='none'">
+                                    🔗 Issue #${task.githubIssue}
+                                </a>
+                            ` : ''}
                         </div>
                         <div class="task-id">${task.id.slice(-6)}</div>
                     </div>
@@ -1225,6 +1235,32 @@
                     </div>
                     <div class="progress-text">Phase 2 of 5 Complete (35%)</div>
                 </div>
+                
+                ${task.githubIssue ? `
+                    <div class="detail-section">
+                        <h3>Related GitHub Issue</h3>
+                        <div style="padding: 15px; background: #333; border-radius: 5px; border-left: 3px solid #4a9eff;">
+                            <div style="margin-bottom: 8px;">
+                                <strong style="color: #4a9eff;">Issue ${task.githubIssue}</strong>: ${task.description.split(':')[1]?.trim() || 'WebRTC Implementation'}
+                            </div>
+                            <div style="font-size: 12px; color: #aaa; margin-bottom: 10px;">
+                                📍 Full URL for context and linking:
+                            </div>
+                            <div style="background: #222; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px; word-break: break-all;">
+                                <a href="https://github.com/michaeloboyle/MessagePedia-WebRTC-Electron/issues/${task.githubIssue.replace('#', '')}" 
+                                   target="_blank" 
+                                   style="color: #4CAF50; text-decoration: none;"
+                                   onmouseover="this.style.textDecoration='underline'"
+                                   onmouseout="this.style.textDecoration='none'">
+                                    https://github.com/michaeloboyle/MessagePedia-WebRTC-Electron/issues/${task.githubIssue.replace('#', '')}
+                                </a>
+                            </div>
+                            <div style="margin-top: 8px; font-size: 11px; color: #666;">
+                                🔗 Click to open in new tab • View full issue context, requirements and discussion
+                            </div>
+                        </div>
+                    </div>
+                ` : ''}
                 
                 <div class="detail-section">
                     <h3>Assigned Agent</h3>
@@ -1685,8 +1721,25 @@ Defines how MessagePedia peers discover and connect to each other in a decentral
                     ${entry.details?.githubIssue ? `
                         <div class="detail-section">
                             <h3>Related GitHub Issue</h3>
-                            <div style="padding: 15px; background: #333; border-radius: 5px;">
-                                <strong>Issue ${entry.details.githubIssue}</strong>: WebRTC P2P Connection Implementation
+                            <div style="padding: 15px; background: #333; border-radius: 5px; border-left: 3px solid #4a9eff;">
+                                <div style="margin-bottom: 8px;">
+                                    <strong style="color: #4a9eff;">Issue #${entry.details.githubIssue}</strong>: WebRTC P2P Connection Implementation
+                                </div>
+                                <div style="font-size: 12px; color: #aaa; margin-bottom: 10px;">
+                                    📍 Full URL for context and linking:
+                                </div>
+                                <div style="background: #222; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px; word-break: break-all;">
+                                    <a href="https://github.com/michaeloboyle/MessagePedia-WebRTC-Electron/issues/${entry.details.githubIssue}" 
+                                       target="_blank" 
+                                       style="color: #4CAF50; text-decoration: none; hover: text-decoration: underline;"
+                                       onmouseover="this.style.textDecoration='underline'"
+                                       onmouseout="this.style.textDecoration='none'">
+                                        https://github.com/michaeloboyle/MessagePedia-WebRTC-Electron/issues/${entry.details.githubIssue}
+                                    </a>
+                                </div>
+                                <div style="margin-top: 8px; font-size: 11px; color: #666;">
+                                    🔗 Click to open in new tab • View full issue context and discussion
+                                </div>
                             </div>
                         </div>
                     ` : ''}
