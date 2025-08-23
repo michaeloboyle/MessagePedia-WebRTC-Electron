@@ -1,10 +1,12 @@
 name: Autonomous Build Heartbeat
 
-on:
-  schedule:
-    # Every 30 minutes during active development
-    - cron: '*/30 * * * *'
-  workflow_dispatch:
+# DISABLED - on:
+#   schedule:
+#     # Every 30 minutes during active development
+#     - cron: '*/30 * * * *'
+#   workflow_dispatch:
+on: []
+# Workflow disabled
 
 jobs:
   heartbeat:

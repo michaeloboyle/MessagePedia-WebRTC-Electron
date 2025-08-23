@@ -1,12 +1,15 @@
+
 name: Progress Notifications
 
-on:
-  push:
-    branches: [main, feature/*]
-  issues:
-    types: [closed]
-  pull_request:
-    types: [opened, closed]
+# DISABLED - on:
+#   push:
+#     branches: [main, feature/*]
+#   issues:
+#     types: [closed]
+#   pull_request:
+#     types: [opened, closed]
+on: []
+# Workflow disabled
 
 jobs:
   notify:

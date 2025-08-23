@@ -1,11 +1,13 @@
 name: Build Status Alerts
 
-on:
-  push:
-    branches: [main, feature/*]
-  schedule:
-    # Check build health every hour
-    - cron: '0 * * * *'
+# DISABLED - on:
+#   push:
+#     branches: [main, feature/*]
+#   schedule:
+#     # Check build health every hour
+#     - cron: '0 * * * *'
+on: []
+# Workflow disabled
 
 jobs:
   status-check:
