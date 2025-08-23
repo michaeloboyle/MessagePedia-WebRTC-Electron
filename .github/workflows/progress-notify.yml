@@ -1,19 +1,29 @@
 
 name: Progress Notifications
 
-# DISABLED - on:
-#   push:
-#     branches: [main, feature/*]
-#   issues:
-#     types: [closed]
-#   pull_request:
-#     types: [opened, closed]
-on: []
-# Workflow disabled
+on:
+  workflow_dispatch:
+    inputs:
+      force_run:
+        description: 'Force run (workflow is disabled)'
+        required: true
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+
+# DISABLED: Original triggers commented out
+# push:
+#   branches: [main, feature/*]
+# issues:
+#   types: [closed]
+# pull_request:
+#   types: [opened, closed]
 
 jobs:
   notify:
     runs-on: ubuntu-latest
+    if: github.event.inputs.force_run == 'true'
     steps:
       - uses: actions/checkout@v3
       

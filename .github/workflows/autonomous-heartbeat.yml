@@ -1,16 +1,24 @@
 name: Autonomous Build Heartbeat
 
-# DISABLED - on:
-#   schedule:
-#     # Every 30 minutes during active development
-#     - cron: '*/30 * * * *'
-#   workflow_dispatch:
-on: []
-# Workflow disabled
+on:
+  workflow_dispatch:
+    inputs:
+      force_run:
+        description: 'Force run (workflow is disabled)'
+        required: true
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+
+# DISABLED: Original triggers commented out
+# schedule:
+#   - cron: '*/30 * * * *'
 
 jobs:
   heartbeat:
     runs-on: ubuntu-latest
+    if: github.event.inputs.force_run == 'true'
     steps:
       - uses: actions/checkout@v3
       
