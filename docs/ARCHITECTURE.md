@@ -1,380 +1,440 @@
-# MessagePedia WebRTC + Electron Architecture Proposal
+# MessagePedia - The Collective Intelligence App: Architecture
 
-**Date**: 2025-08-06  
-**Purpose**: Replace JXTA-based Java implementation with WebRTC + Electron for reliable P2P messaging and file distribution  
-**Context**: Solving persistent JXTA socket resolution failures (15-second timeouts) identified in issue #358
+**Date**: 2025-08-20  
+**Purpose**: Multi-tier decentralized content collaboration platform architecture  
+**Context**: Comprehensive system design for Personal/Professional/Business/Enterprise tiers
 
 ## Executive Summary
 
-Replicating MessagePedia with **WebRTC + Electron** offers a modern, maintainable solution that directly addresses the core JXTA networking failures while providing superior file distribution capabilities and cross-platform compatibility.
+MessagePedia is a next-generation decentralized content collaboration platform that enables powerful ideas and productivity to emerge from collaboration, expertise, and competition of ideas from teams — enhanced by AI — while adhering to data privacy and sovereignty laws.
 
-## Architecture Overview
+## Multi-Tier Product Architecture
 
-### **Core Stack**
-- **Frontend**: Electron (Chromium + Node.js)  
-- **P2P Communication**: WebRTC (messaging + file transfer)
-- **Signaling Server**: Node.js + Socket.io (lightweight)
-- **Language**: JavaScript/TypeScript
-- **Packaging**: Cross-platform desktop app
+### Product Offering Matrix
 
-### **Component Architecture**
+| Feature | Personal (FREE) | Professional ($6/$60) | Business ($12/$120) | Enterprise (CALL) |
+|---------|-----------------|----------------------|-------------------|------------------|
+| **Core Features** |
+| File Sharing with Unshare | ✅ | ✅ | ✅ | ✅ |
+| Messaging with Recall | ✅ | ✅ | ✅ | ✅ |
+| Role-based Access Control | ✅ | ✅ | ✅ | ✅ |
+| File Versioning | ✅ | ✅ | ✅ | ✅ |
+| End-to-End Encryption | ✅ | ✅ | ✅ | ✅ |
+| Search (Messages and meta-data) | ✅ | ✅ | ✅ | ✅ |
+| UNLIMITED File Size, Storage, Time | ✅ | ✅ | ✅ | ✅ |
+| Desktop Access (Mac/Windows/Linux) | ✅ | ✅ | ✅ | ✅ |
+| **Tier-Specific Features** |
+| Topic Membership | Unlimited | Unlimited | Unlimited | Unlimited |
+| Topic Ownership | 3 Topics | Unlimited | Unlimited | Unlimited |
+| AI Agent (Content Summarization) | ❌ | ✅ | ✅ | ✅ |
+| Audit Trail | ❌ | ❌ | ✅ | ✅ |
+| Web/Mobile Access | ❌ | ❌ | ✅ | ✅ |
+| Customer Self-hosting | ❌ | ❌ | ❌ | ✅ |
+| Admin Console | ❌ | ❌ | ❌ | ✅ |
+| **Target Users** | All | Prosumers | Teams/SMBs | Enterprises |
+
+## System Architecture Overview
+
+### Decentralized Content Services Platform
 
 ```mermaid
 architecture-beta
-    group electron(fa:fa-desktop)[Electron App Container]
+    group platform[Decentralized Content Services Platform]
     
-    service ui(logos:react)[MessagePedia UI] in electron
-    service webrtc[WebRTC P2P Layer] in electron
-    service backend(logos:nodejs)[Node.js Backend] in electron
+    group client_tier[Client Applications] in platform
+    service desktop[Desktop Apps<br/>Electron (Mac/Windows/Linux)] in client_tier
+    service web[Web Apps<br/>React SPA] in client_tier
+    service mobile[Mobile Apps<br/>iOS/Android] in client_tier
     
-    group webrtc_channels[P2P Channels] in webrtc
-    service data_channel[Data Channels<br/>Messages + Files] in webrtc_channels
-    service media_channel[Media Channels<br/>Voice + Video] in webrtc_channels
+    group core_services[Core Services Layer] in platform
+    service auth[Identity & Access<br/>AWS Cognito] in core_services
+    service messaging[Messaging & File Sharing<br/>WebRTC P2P] in core_services
+    service ai[AI Agent<br/>Local Processing] in core_services
     
-    service signaling(logos:socketio)[Signaling Server<br/>Socket.io]
+    group enterprise_services[Enterprise Services] in platform
+    service federation[User & Content Federation<br/>Cross-org Sync] in enterprise_services
+    service encryption[End-to-End Encryption<br/>All Tiers] in enterprise_services
+    service compliance[Compliance & Reporting<br/>Business+ Tiers] in enterprise_services
     
-    ui:B --> T:webrtc
-    webrtc:B --> T:backend
-    backend:R --> B:signaling
-    data_channel:B --> T:media_channel
+    group infrastructure[Infrastructure Layer] in platform
+    service rendezvous[Rendezvous Service<br/>Peer Discovery] in infrastructure
+    service relay[Relay Service<br/>Message/File Sync] in infrastructure
+    service content[Content Service<br/>Web/Mobile Bridge] in infrastructure
+    service audit[Audit Service<br/>Compliance Tracking] in infrastructure
+    service admin[Admin Service<br/>Enterprise Management] in infrastructure
+    service container[Containerization<br/>Self-hosting] in infrastructure
+    
+    desktop:B --> T:messaging
+    web:B --> T:content
+    mobile:B --> T:content
+    
+    messaging:B --> T:auth
+    messaging:R --> L:encryption
+    ai:B --> T:messaging
+    
+    auth:B --> T:rendezvous
+    messaging:B --> T:relay
+    compliance:B --> T:audit
+    
+    federation:R --> L:admin
+    admin:B --> T:container
 ```
 
-#### **System Flow Overview**
+## Core Technology Stack
 
-```mermaid
-flowchart TB
-    A[User Opens MessagePedia] --> B[Electron App Starts]
-    B --> C[Connect to Signaling Server]
-    C --> D[Discover Available Peers]
-    D --> E[Establish WebRTC Connections]
-    E --> F{Connection Type}
-    
-    F -->|Data| G[Message Exchange<br/>File Transfer]
-    F -->|Media| H[Voice/Video Calls]
-    
-    G --> I[Local Storage<br/>Message History]
-    H --> J[Real-time Communication]
-    
-    I --> K[Peer Synchronization]
-    J --> K
-    K --> L[Multi-device Support]
-```
+### Universal Components (All Tiers)
+- **P2P Foundation**: WebRTC for direct peer connections
+- **Authentication**: AWS Cognito user management
+- **Encryption**: End-to-end encryption for all content
+- **Desktop**: Electron applications (Mac/Windows/Linux)
+- **Database**: SQLite for local storage
+- **Signaling**: Rendezvous/Relay services for connection establishment
 
-## Addressing Current JXTA Issues
+### Tier-Specific Components
 
-### **Direct Problem Resolution**
+#### Professional+ Tiers
+- **AI Processing**: Local content summarization (Professional+)
+- **Search Enhancement**: AI-powered content discovery
 
-```mermaid
-quadrantChart
-    title JXTA vs WebRTC: Reliability & Performance Analysis
-    x-axis Low Reliability --> High Reliability
-    y-axis Slow Performance --> Fast Performance
-    
-    quadrant-1 Fast & Reliable (Target Zone)
-    quadrant-2 Fast but Unreliable  
-    quadrant-3 Slow & Unreliable (Problem Zone)
-    quadrant-4 Slow but Reliable
-    
-    WebRTC Connection: [0.9, 0.9]
-    WebRTC File Transfer: [0.85, 0.85]
-    WebRTC NAT Traversal: [0.8, 0.8]
-    
-    JXTA Socket Resolution: [0.2, 0.3]
-    JXTA Service Recovery: [0.3, 0.2]
-    JXTA Message Listeners: [0.25, 0.35]
-```
+#### Business+ Tiers  
+- **Web/Mobile Access**: Content Service bridges P2P to web/mobile
+- **Audit System**: Compliance tracking and reporting
+- **Multi-platform**: iOS/Android/Web applications
 
-#### **Issue-by-Issue Comparison**
+#### Enterprise Tier
+- **Self-hosting**: Containerized deployment options
+- **Admin Console**: User, content, and policy management
+- **Federation**: Cross-organization collaboration
 
-| JXTA Issue | WebRTC Solution | Performance Gain |
-|------------|-----------------|------------------|
-| **15-second connection timeouts** | Built-in ICE/STUN/TURN with ~1-2 second establishment | **87% faster** |
-| **Socket resolution failures** | Automatic NAT traversal via ICE candidates | **95% success rate** |
-| **Missing message listeners** | Native browser WebRTC APIs with reliable event handling | **100% reliability** |
-| **Service recovery issues** | Automatic reconnection and connection state management | **Zero manual intervention** |
-| **Sleep/wake connection breaks** | Built-in connection monitoring and re-establishment | **Seamless recovery** |
+## Technical Architecture Details
 
-## Technical Implementation Details
-
-### **1. WebRTC Data Channels for Messaging**
-```javascript
-// Reliable, ordered channel for messages
-const messageChannel = peerConnection.createDataChannel('messages', {
-    ordered: true,
-    reliable: true
-});
-
-// Fast, unreliable channel for presence
-const presenceChannel = peerConnection.createDataChannel('presence', {
-    ordered: false, 
-    reliable: false,
-    maxRetransmits: 0
-});
-```
-
-### **2. File Transfer Implementation**
-
-#### **WebRTC Connection Establishment Flow**
+### 1. P2P Messaging Foundation
 
 ```mermaid
 sequenceDiagram
-    participant A as Alice (Sender)
-    participant S as Signaling Server
-    participant B as Bob (Receiver)
+    participant A as Alice (Peer A)
+    participant R as Rendezvous Service
+    participant B as Bob (Peer B)
     
-    Note over A,B: Initial Connection Setup
-    A->>S: Join room "project-files"
-    B->>S: Join room "project-files"
-    S->>B: Notify: Alice joined room
+    Note over A,B: Peer Discovery
+    A->>R: Register peer with AWS Cognito identity
+    B->>R: Register peer with AWS Cognito identity
+    R->>A: Notify: Bob available for P2P
+    R->>B: Notify: Alice available for P2P
     
-    Note over A,B: WebRTC Handshake
-    A->>A: Create RTCPeerConnection
-    A->>A: Create data channels (files, messages)
-    A->>S: Send WebRTC Offer (SDP)
-    S->>B: Forward offer to Bob
+    Note over A,B: WebRTC Connection
+    A->>R: Send WebRTC offer to Bob
+    R->>B: Forward offer
+    B->>R: Send WebRTC answer
+    R->>A: Forward answer
     
-    B->>B: Create RTCPeerConnection
-    B->>B: Set remote description
-    B->>S: Send WebRTC Answer (SDP)
-    S->>A: Forward answer to Alice
+    Note over A,B: ICE Negotiation
+    A<-->R: Exchange ICE candidates
+    R<-->B: Forward ICE candidates
     
-    Note over A,B: ICE Candidate Exchange
-    A<-->S: Exchange ICE candidates
-    S<-->B: Forward ICE candidates
-    
-    Note over A,B: Direct P2P Connection Established
-    A<-->B: Direct WebRTC data channel connection
-    
-    Note over A,B: File Transfer
-    A->>B: File metadata (name, size, type)
-    B->>A: Transfer accepted
-    A->>B: File chunks (64KB each)
-    B->>A: Progress confirmations
-    A->>B: Transfer complete signal
-    B->>A: File received & verified
+    Note over A,B: Direct P2P Established
+    A<-->B: Direct encrypted WebRTC connection
+    A<-->B: Topic-based messaging
+    A<-->B: File sharing with versioning
 ```
 
-#### **Chunked File Transfer Strategy**
+### 2. Multi-Tier Authentication
 
 ```mermaid
 flowchart TD
-    A[File Selected<br/>📄 document.pdf<br/>2.5MB] --> B[Calculate Chunks<br/>40 chunks × 64KB]
+    A[User Login] --> B{User Type}
     
-    B --> C[Create Transfer Queue<br/>🔄 Queue Management]
-    C --> D[Send Chunk #1<br/>📦 64KB ArrayBuffer]
+    B -->|Personal/Professional| C[AWS Cognito<br/>Personal Email]
+    B -->|Business| D[AWS Cognito<br/>Organization Email]
+    B -->|Enterprise| E[Self-hosted Identity<br/>or AWS Cognito]
     
-    D --> E{Receiver Ready?}
-    E -->|Yes| F[Send Next Chunk]
-    E -->|No| G[Wait for Backpressure<br/>⏳ Queue Control]
+    C --> F[Desktop App Access]
+    D --> G[Desktop + Web/Mobile]
+    E --> H[Full Platform Access]
     
-    F --> H{More Chunks?}
-    H -->|Yes| F
-    H -->|No| I[Transfer Complete<br/>✅ Verify Integrity]
+    F --> I[Basic P2P Features]
+    G --> J[Business Features<br/>+ Audit Trails]
+    H --> K[Enterprise Management<br/>+ Self-hosting]
     
-    G --> E
-    
-    I --> J[Notify Sender<br/>📋 Success Report]
-    
-    style A fill:#e3f2fd
-    style I fill:#e8f5e8
-    style J fill:#fff3e0
+    I --> L[Topic Limit: 3]
+    J --> M[Unlimited Topics]
+    K --> N[Admin Console]
 ```
 
-**Implementation Code:**
-```javascript
-async function sendFile(file, dataChannel) {
-    const chunkSize = 64 * 1024; // 64KB chunks
-    const chunks = Math.ceil(file.size / chunkSize);
+### 3. Topics: P2P Workspaces
+
+```mermaid
+architecture-beta
+    group topic[Topic: "Project Alpha"]
     
-    // Send file metadata first
-    dataChannel.send(JSON.stringify({
-        type: 'file-start',
-        name: file.name,
-        size: file.size,
-        chunks: chunks
-    }));
+    service owner[Owner<br/>Complete Control] in topic
+    service contributor[Contributors<br/>Edit + Share] in topic
+    service reviewer[Reviewers<br/>View + Comment] in topic
     
-    // Send chunks with progress tracking
-    for (let i = 0; i < chunks; i++) {
-        const start = i * chunkSize;
-        const end = Math.min(start + chunkSize, file.size);
-        const chunk = file.slice(start, end);
-        
-        await sendChunk(chunk, i, chunks, dataChannel);
-    }
-}
+    group content[Content Management] in topic
+    service files[Files<br/>Unlimited Size] in content
+    service messages[Messages<br/>with Recall] in content
+    service versions[Version History<br/>All Changes] in content
+    
+    group access[Access Control] in topic
+    service encryption[End-to-End<br/>Encryption] in access
+    service permissions[Role-based<br/>Permissions] in access
+    service lifecycle[Topic Lifecycle<br/>Archive/Delete] in access
+    
+    owner:R --> T:contributor
+    contributor:R --> T:reviewer
+    
+    owner:B --> T:files
+    files:R --> L:messages
+    messages:R --> L:versions
+    
+    permissions:B --> T:encryption
+    encryption:R --> T:lifecycle
 ```
 
-### **3. Signaling Server (Minimal)**
-**Socket.io Implementation (~50 lines):**
-```javascript
-const io = require('socket.io')(server);
+### 4. AI Integration Architecture
 
-io.on('connection', (socket) => {
-    socket.on('join-room', (roomId) => {
-        socket.join(roomId);
-        socket.to(roomId).emit('peer-joined', socket.id);
-    });
+```mermaid
+flowchart LR
+    A[Topic Content] --> B{AI Processing}
     
-    socket.on('signal', (data) => {
-        socket.to(data.to).emit('signal', {
-            from: socket.id,
-            signal: data.signal
-        });
-    });
-});
+    B -->|Professional+| C[Local AI Agent<br/>Content Summarization]
+    B -->|Business+| D[Enhanced Search<br/>AI-powered Discovery]
+    B -->|Enterprise| E[Advanced AI<br/>Custom Models]
+    
+    C --> F[Summary Generation<br/>Privacy Preserved]
+    D --> G[Intelligent Search<br/>Encrypted Content]
+    E --> H[Custom AI Workflows<br/>Enterprise Policies]
+    
+    F --> I[P2P Distribution]
+    G --> I
+    H --> I
+    
+    I --> J[Zero-Knowledge<br/>AI Enhancement]
 ```
 
-### **4. Peer Discovery & Presence**
-- **Room-based architecture** - Topics map to WebRTC rooms
-- **Automatic peer discovery** - New peers announced via signaling
-- **Real-time presence** - WebRTC connection state indicates online status
-- **Multiple device support** - Each device gets unique peer ID
+### 5. Web/Mobile Bridge Architecture (Business+ Tiers)
 
-## Proven Real-World Examples
+```mermaid
+sequenceDiagram
+    participant M as Mobile App
+    participant C as Content Service
+    participant P as P2P Desktop Peer
+    participant T as Topic Members
+    
+    Note over M,T: Content Access from Mobile
+    M->>C: Request topic content
+    C->>C: Authenticate user (AWS Cognito)
+    C->>P: Query peer for topic content
+    P->>C: Encrypted content stream
+    C->>M: Decrypted content (HTTPS)
+    
+    Note over M,T: Content Sharing from Mobile
+    M->>C: Share file to topic
+    C->>C: Encrypt and chunk file
+    C->>P: Distribute to P2P network
+    P->>T: Propagate to topic members
+    T->>P: Acknowledge receipt
+    P->>C: Confirm distribution
+    C->>M: Share complete
+```
 
-### **Similar Applications**
-- **Discord** - Gaming voice/video chat using WebRTC + Electron
-- **Slack** - Team messaging with file sharing (Electron)
-- **Microsoft Teams** - Video conferencing and collaboration
-- **WebTorrent Desktop** - P2P file sharing using WebRTC in Electron
-- **WhatsApp Desktop** - Messaging app (Electron wrapper)
+## Enterprise Self-Hosting Architecture
 
-### **WebTorrent as Reference**
-WebTorrent Desktop demonstrates WebRTC + Electron for P2P file transfer:
-- **Hybrid network** - Connects to both BitTorrent and WebTorrent peers
-- **Browser compatibility** - Works in browsers and desktop
-- **Large file support** - Handles GB-sized files efficiently
-- **Open source** - Available for architecture reference
+### Containerized Deployment
 
-## Development & Migration Advantages
+```mermaid
+architecture-beta
+    group enterprise[Enterprise Deployment]
+    
+    group containers[Container Stack] in enterprise
+    service app[MessagePedia App<br/>Electron Container] in containers
+    service auth_local[Local Auth Service<br/>Enterprise SSO] in containers
+    service relay_local[Local Relay Service<br/>Internal P2P] in containers
+    service admin_local[Admin Console<br/>Policy Management] in containers
+    
+    group storage[Storage Layer] in enterprise
+    service db[Enterprise Database<br/>Audit Trails] in storage
+    service files[File Storage<br/>Corporate Assets] in storage
+    service backup[Backup System<br/>Compliance] in storage
+    
+    group network[Network Layer] in enterprise
+    service firewall[Corporate Firewall<br/>Security Policies] in network
+    service vpn[VPN Access<br/>Remote Workers] in network
+    service federation[External Federation<br/>Partner Orgs] in network
+    
+    app:B --> T:auth_local
+    app:R --> L:relay_local
+    admin_local:B --> T:auth_local
+    
+    auth_local:B --> T:db
+    relay_local:B --> T:files
+    admin_local:B --> T:backup
+    
+    relay_local:B --> T:firewall
+    firewall:R --> L:vpn
+    vpn:R --> L:federation
+```
 
-### **Team Productivity**
-- **Web technologies** - Leverages existing JavaScript/HTML/CSS skills
-- **Rapid development** - Faster iteration than Java desktop apps
-- **Modern tooling** - NPM ecosystem, hot reload, DevTools
-- **Cross-platform** - Single codebase for Windows/Mac/Linux
+## Data Architecture
 
-### **Maintenance Benefits**
-- **No JXTA complexity** - Eliminates deprecated P2P framework
-- **Browser-backed** - Benefits from Chromium's ongoing WebRTC improvements
-- **Active ecosystem** - WebRTC and Electron actively maintained
-- **Better debugging** - Chrome DevTools integration
+### SQLite Schema (All Tiers)
 
-## Performance Considerations
+```sql
+-- Core P2P Tables
+CREATE TABLE peers (
+    id TEXT PRIMARY KEY,
+    display_name TEXT NOT NULL,
+    email TEXT,
+    tier TEXT CHECK(tier IN ('personal', 'professional', 'business', 'enterprise')),
+    topic_limit INTEGER DEFAULT 3,
+    is_online BOOLEAN DEFAULT FALSE,
+    reputation_score INTEGER DEFAULT 100,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
 
-### **Electron vs Java Comparison**
+CREATE TABLE topics (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT,
+    owner_id TEXT REFERENCES peers(id),
+    is_private BOOLEAN DEFAULT TRUE,
+    is_archived BOOLEAN DEFAULT FALSE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
 
-| Aspect | Electron | Java (Current) |
-|--------|----------|----------------|
-| **Memory Usage** | Higher (Chrome engine) | Lower (JVM) |
-| **CPU Performance** | Good (V8 engine) | Better (optimized JVM) |
-| **Startup Time** | Slower (Chrome startup) | Faster |
-| **File Size** | Larger (bundles Chromium) | Smaller |
-| **Development Speed** | Faster | Slower |
-| **Cross-platform** | Excellent | Good |
-| **System Integration** | Good | Excellent |
-| **WebRTC Support** | Native | Requires libraries |
+CREATE TABLE topic_members (
+    topic_id TEXT REFERENCES topics(id),
+    peer_id TEXT REFERENCES peers(id),
+    role TEXT CHECK(role IN ('owner', 'contributor', 'reviewer')),
+    joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (topic_id, peer_id)
+);
 
-### **Performance Mitigations**
-- **Lazy loading** - Load UI components on demand
-- **Worker threads** - File processing in background
-- **Memory management** - Explicit cleanup of large objects
-- **Native modules** - Critical performance code in native Node.js modules
+-- Business+ Tier Tables
+CREATE TABLE audit_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    peer_id TEXT REFERENCES peers(id),
+    topic_id TEXT REFERENCES topics(id),
+    action TEXT NOT NULL,
+    details TEXT,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+);
 
-## File Distribution Superiority
+-- Enterprise Tier Tables  
+CREATE TABLE admin_policies (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    policy_name TEXT NOT NULL,
+    policy_data TEXT NOT NULL,
+    applied_by TEXT REFERENCES peers(id),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
 
-### **vs. Current JXTA Implementation**
-- **Direct P2P transfer** - No server storage required
-- **Multi-source downloads** - Can receive file chunks from multiple peers
-- **Automatic NAT traversal** - Works behind firewalls/routers
-- **Built-in encryption** - All WebRTC traffic encrypted (DTLS/SRTP)
-- **Progress tracking** - Real-time transfer progress
-- **Resume capability** - Restart interrupted transfers
+## Security Architecture
 
-### **File Transfer Performance**
-Based on WebTorrent benchmarks:
-- **Browser-to-browser**: ~50MB/s on local network
-- **Cross-internet**: Limited by bandwidth, not protocol
-- **Large files**: GB-sized files handled efficiently
-- **Multiple recipients**: Broadcast file to many peers simultaneously
+### End-to-End Encryption (All Tiers)
 
-## Implementation Roadmap
+```mermaid
+flowchart TD
+    A[Content Creation] --> B[Local Encryption<br/>AES-256]
+    B --> C[WebRTC Channel<br/>DTLS Transport]
+    C --> D[Peer Reception<br/>Encrypted]
+    D --> E[Local Decryption<br/>Recipient Only]
+    
+    F[Key Management] --> G[Per-Topic Keys]
+    G --> H[Key Rotation]
+    H --> I[Forward Secrecy]
+    
+    B -.-> F
+    E -.-> F
+    
+    J[Zero-Knowledge<br/>Signaling] --> K[Metadata Protection]
+    K --> L[Content Privacy]
+    
+    C -.-> J
+```
 
-### **Phase 1: Core Infrastructure (Weeks 1-4)**
-1. **Signaling server setup** - Node.js + Socket.io
-2. **Electron app skeleton** - Basic UI framework
-3. **WebRTC peer connection** - Basic messaging between two peers
-4. **Simple file transfer** - Small file sharing proof of concept
+## Performance Requirements
 
-### **Phase 2: MessagePedia Features (Weeks 5-8)**
-1. **Topic/room system** - Multi-user chat rooms
-2. **User profiles & presence** - Online/offline status
-3. **Large file transfer** - Chunked transfer with progress
-4. **Persistence layer** - Local storage for messages/files
+### Connection Performance
+- **Peer Discovery**: <2 seconds via Rendezvous Service
+- **WebRTC Establishment**: <3 seconds with ICE/STUN/TURN
+- **File Transfer**: >50MB/s on local network, bandwidth-limited over internet
+- **Topic Sync**: <1 second for message propagation
 
-### **Phase 3: Advanced Features (Weeks 9-12)**
-1. **Multiple device sync** - User has multiple clients
-2. **Offline message queue** - Store messages when peers offline
-3. **File preview/thumbnails** - Media file previews
-4. **Voice/video calls** - Optional WebRTC media features
+### Scalability Targets
+- **Personal Tier**: Up to 3 owned topics, unlimited membership
+- **Professional+ Tiers**: Unlimited topics, up to 1000 members per topic
+- **Enterprise Tier**: Unlimited scale with self-hosting options
 
-### **Phase 4: Production Ready (Weeks 13-16)**
-1. **Error handling & recovery** - Robust connection management
-2. **Performance optimization** - Memory usage, transfer speeds
-3. **Security hardening** - Input validation, encryption verification
-4. **Auto-updates** - Electron auto-updater integration
+### Resource Usage
+- **Desktop App**: <300MB RAM, <1GB disk for app
+- **Mobile App**: <100MB RAM, <500MB disk
+- **Enterprise Server**: Scalable based on user count and content volume
 
-## Deployment & Distribution
+## Deployment Architecture
 
-### **Packaging Options**
-- **Electron Builder** - Creates installers for all platforms
-- **Auto-updater** - Seamless background updates
-- **Code signing** - Platform-specific app signing
-- **Portable versions** - No-install executables
+### Cloud Infrastructure (Managed Tiers)
 
-### **Signaling Server Deployment**
-- **Lightweight server** - Can run on minimal VPS
-- **Docker container** - Easy deployment and scaling
-- **Multiple instances** - Load balancing for scale
-- **Self-hosted option** - Users can run their own servers
+```mermaid
+architecture-beta
+    group aws[AWS Infrastructure]
+    
+    service cognito[AWS Cognito<br/>User Authentication] in aws
+    service lambda[AWS Lambda<br/>Rendezvous/Relay] in aws
+    service s3[AWS S3<br/>Mobile Content Bridge] in aws
+    service rds[AWS RDS<br/>Audit Trails] in aws
+    
+    group cdn[Content Delivery] in aws
+    service cloudfront[CloudFront<br/>Web App Distribution] in aws
+    service api[API Gateway<br/>Mobile/Web APIs] in aws
+    
+    cognito:R --> L:lambda
+    lambda:B --> T:s3
+    api:B --> T:rds
+    cloudfront:R --> L:api
+```
 
-## Risk Assessment
+### Self-Hosting Options (Enterprise)
 
-### **Technical Risks**
-- **Learning curve** - Team unfamiliar with WebRTC
-- **Browser dependencies** - Tied to Chromium WebRTC implementation
-- **NAT traversal edge cases** - Some corporate firewalls may block
-- **File transfer limits** - Large files require careful chunking
+```mermaid
+flowchart LR
+    A[Enterprise Requirements] --> B{Deployment Option}
+    
+    B -->|Cloud Hybrid| C[AWS + On-Premise<br/>Data Bridge]
+    B -->|Full Self-Host| D[Complete On-Premise<br/>All Services Local]
+    B -->|Container Cloud| E[Kubernetes<br/>Private Cloud]
+    
+    C --> F[Corporate Data<br/>Stays On-Premise]
+    D --> G[Complete Control<br/>No External Dependencies]
+    E --> H[Scalable Infrastructure<br/>Container Orchestration]
+```
 
-### **Business Risks**
-- **Resource usage** - Electron apps consume more memory
-- **User perception** - Some users prefer native apps
-- **Platform limitations** - Some OS integrations harder than Java
+## Development Considerations
 
-### **Mitigation Strategies**
-- **Prototype early** - Validate WebRTC approach with simple demo
-- **TURN server backup** - For difficult network environments
-- **Performance monitoring** - Track memory/CPU usage in development
-- **Hybrid approach** - Keep Java backend as fallback initially
+### Technical Feasibility Analysis
+1. **✅ WebRTC P2P**: Proven technology, handles NAT traversal
+2. **✅ Multi-tier Features**: Feasible with conditional feature flags
+3. **⚠️ Web/Mobile Bridge**: Complex but achievable with Content Service
+4. **⚠️ Enterprise Self-hosting**: Requires containerization and deployment automation
+5. **✅ AWS Integration**: Well-documented APIs and SDKs available
 
-## Conclusion
+### Architecture Tensions Resolution
+1. **P2P vs Web/Mobile**: Content Service acts as authenticated bridge
+2. **Zero-knowledge vs Cognito**: Authentication separate from content encryption
+3. **Freemium Limits**: Enforced at app level, verified by community/audit
+4. **Self-hosting vs Managed**: Containerized deployment maintains feature parity
 
-**WebRTC + Electron architecture directly solves MessagePedia's core JXTA networking issues** while providing superior file distribution, modern development experience, and proven scalability.
+## Next Steps for P Phase
 
-**Key Benefits:**
-- ✅ **Eliminates JXTA timeout issues** with reliable WebRTC connections
-- ✅ **Superior file distribution** compared to current implementation  
-- ✅ **Faster development** using web technologies
-- ✅ **Cross-platform native** desktop app experience
-- ✅ **Modern, maintainable** technology stack
-
-**Recommendation**: Proceed with WebRTC + Electron implementation as MessagePedia's architecture replacement, starting with a 4-week proof of concept to validate the approach.
+1. **Component Interface Design**: Define APIs between all architectural components
+2. **Database Schema Refinement**: Complete multi-tier schema with migrations
+3. **Authentication Flow Design**: Detailed AWS Cognito integration patterns
+4. **Deployment Strategy**: Container specifications and cloud infrastructure
+5. **Testing Strategy**: Multi-tier testing approach with different feature sets
 
 ---
 
-**References:**
-- MessagePedia Issue #358 Log Analysis
-- WebTorrent Desktop architecture
-- Discord/Slack Electron implementations
-- WebRTC performance benchmarks
+**Architecture Status**: Comprehensive multi-tier platform design complete  
+**Next Phase**: P (Planning) - Detailed implementation planning and component design

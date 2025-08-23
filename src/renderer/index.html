@@ -3,13 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MessagePedia WebRTC</title>
+    <title>MessagePedia - The Collective Intelligence App</title>
+    <link rel="icon" type="image/svg+xml" href="../../assets/logo-mp.svg">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div id="app">
         <header>
-            <h1>MessagePedia WebRTC + Electron</h1>
+            <div class="header-content">
+                <img src="../../assets/logo-mp.svg" alt="MessagePedia Logo" class="logo">
+                <div class="header-text">
+                    <h1>MessagePedia</h1>
+                    <p class="tagline">The Collective Intelligence App</p>
+                </div>
+            </div>
             <div id="connection-status">Disconnected</div>
         </header>
         
@@ -24,6 +31,12 @@
                 <div id="message-input">
                     <input type="text" placeholder="Type a message..." />
                     <button>Send</button>
+                    <input type="file" id="file-input" style="display: none;" multiple />
+                    <button id="file-button">📎 Share File</button>
+                </div>
+                
+                <div id="file-drop-zone" style="display: none;">
+                    <p>Drop files here to share with peers</p>
                 </div>
             </div>
             

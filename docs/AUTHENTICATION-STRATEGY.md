@@ -1,400 +1,427 @@
 # MessagePedia Authentication Strategy
 
-**Date**: 2025-08-11  
-**Purpose**: Secure authentication implementation for WebRTC P2P messaging  
-**Context**: Sign in with Apple integration and OAuth 2.0 flow documentation
+**Date**: 2025-08-20  
+**Purpose**: Multi-tier authentication architecture for The Collective Intelligence App  
+**Context**: AWS Cognito integration with enterprise identity management
 
 ## Executive Summary
 
-MessagePedia implements secure authentication using **Sign in with Apple** as the primary method, providing fast, privacy-focused user verification with minimal data collection. This approach aligns with Apple's privacy guidelines while ensuring secure peer identity verification for P2P communications.
+MessagePedia implements a comprehensive authentication strategy using **AWS Cognito** as the primary identity provider, supporting multi-tier access control, enterprise integration, and self-hosting options. This approach balances security, scalability, and user experience across all product tiers.
 
-## Authentication Architecture
+## Multi-Tier Authentication Architecture
 
-### **Sign in with Apple Flow**
+### Authentication by Tier
+
+| Tier | Authentication Method | Identity Separation | Features |
+|------|----------------------|-------------------|----------|
+| **Personal (FREE)** | AWS Cognito Personal | Personal email | Basic P2P access |
+| **Professional ($6/$60)** | AWS Cognito Personal | Personal email | Unlimited topics + AI |
+| **Business ($12/$120)** | AWS Cognito Organization | Work email domains | Web/Mobile + Audit |
+| **Enterprise (CALL)** | AWS Cognito + Self-hosted | SSO integration | Full control + Admin |
+
+## AWS Cognito Integration Architecture
+
+### Core Authentication Flow
 
 ```mermaid
 sequenceDiagram
-    participant User as User
-    participant App as MessagePedia App
-    participant Apple as Apple ID Server
-    participant Backend as Signaling Server
-    participant Keychain as Electron SafeStorage
+    participant U as User
+    participant A as MessagePedia App
+    participant C as AWS Cognito
+    participant R as Rendezvous Service
+    participant P as P2P Network
     
-    Note over User,Keychain: Initial Authentication
-    User->>App: Click "Sign in with Apple"
-    App->>Apple: Request authorization with scopes
-    Apple->>User: Show Apple ID authentication
-    User->>Apple: Authenticate (Face ID/Touch ID/Password)
+    Note over U,P: Initial Authentication
+    U->>A: Launch MessagePedia
+    A->>C: Check existing session
+    C->>A: No valid session
+    A->>U: Show login screen
     
-    Note over User,Keychain: OAuth Token Exchange
-    Apple->>App: Return authorization code
-    App->>Apple: Exchange code for identity token
-    Apple->>App: Return JWT identity token + refresh token
+    Note over U,P: AWS Cognito Authentication
+    U->>A: Enter credentials
+    A->>C: Authenticate user
+    C->>C: Validate credentials
+    C->>A: Return JWT tokens (ID, Access, Refresh)
     
-    Note over User,Keychain: Token Validation & Storage
-    App->>App: Validate JWT signature
-    App->>App: Extract user identity (email, name)
-    App->>Keychain: Store tokens securely
-    
-    Note over User,Keychain: Backend Registration
-    App->>Backend: Register peer with verified identity
-    Backend->>App: Return peer ID and room credentials
-    App->>App: Initialize P2P messaging
+    Note over U,P: Session Establishment
+    A->>A: Extract user claims (email, tier, groups)
+    A->>A: Store tokens securely (Electron SafeStorage)
+    A->>R: Register peer with verified identity
+    R->>A: Return peer credentials
+    A->>P: Initialize P2P with authenticated identity
 ```
 
-### **Authentication Components**
+### Multi-Tier User Pool Architecture
 
 ```mermaid
 architecture-beta
-    group auth(fa:fa-shield-alt)[Authentication System]
+    group cognito[AWS Cognito User Pools]
     
-    service apple_oauth(fa:fa-apple)[Sign in with Apple] in auth
-    service token_manager[JWT Token Manager] in auth
-    service credential_store[Credential Storage] in auth
+    group personal_pool[Personal User Pool] in cognito
+    service personal_users[Personal Users<br/>@gmail.com, @yahoo.com] in personal_pool
+    service personal_groups[User Groups<br/>Personal, Professional] in personal_pool
     
-    service peer_identity[Peer Identity Manager] in auth
-    service session_manager[Session Management] in auth
+    group business_pool[Business User Pool] in cognito
+    service business_users[Business Users<br/>@company.com domains] in business_pool
+    service business_groups[User Groups<br/>Business, Teams] in business_pool
     
-    group storage[Secure Storage] in auth
-    service electron_safe[Electron SafeStorage] in storage
-    service keychain[System Keychain] in storage
+    group enterprise_pool[Enterprise User Pool] in cognito
+    service enterprise_users[Enterprise Users<br/>SSO Federation] in enterprise_pool
+    service enterprise_groups[User Groups<br/>Admin, Employee] in enterprise_pool
     
-    apple_oauth:R --> L:token_manager
-    token_manager:B --> T:credential_store
-    credential_store:R --> L:electron_safe
-    credential_store:R --> L:keychain
+    group federation[Identity Federation] in cognito
+    service saml[SAML 2.0<br/>Enterprise SSO] in federation
+    service oidc[OpenID Connect<br/>Third-party IdP] in federation
+    service ldap[LDAP/AD<br/>Directory Services] in federation
     
-    token_manager:B --> T:peer_identity
-    peer_identity:R --> L:session_manager
+    personal_users:B --> T:personal_groups
+    business_users:B --> T:business_groups
+    enterprise_users:B --> T:enterprise_groups
+    
+    enterprise_users:R --> L:saml
+    saml:B --> T:oidc
+    oidc:B --> T:ldap
 ```
 
-## Implementation Details
+## Tier-Specific Authentication Details
 
-### **Apple OAuth Configuration**
+### Personal & Professional Tiers
 
-```javascript
-// Apple Sign-In Configuration
-const appleAuthConfig = {
-  clientId: 'com.oboyle.messagepedia', // App Bundle ID
-  redirectURI: 'https://messagepedia.oboyle.co/auth/callback',
-  scope: 'email name', // Minimal data collection
-  responseType: 'code',
-  responseMode: 'form_post',
-  state: generateSecureRandomState(),
-  nonce: generateSecureNonce()
-};
-
-// Electron Implementation
-const { shell } = require('electron');
-
-async function signInWithApple() {
-  const authURL = buildAppleAuthURL(appleAuthConfig);
-  await shell.openExternal(authURL);
-  
-  // Handle deep link callback
-  app.setAsDefaultProtocolClient('messagepedia');
-}
-```
-
-### **JWT Token Validation**
+**Authentication Method**: AWS Cognito User Pool (Personal)
 
 ```mermaid
 flowchart TD
-    A[Receive JWT Token] --> B[Extract Header]
-    B --> C[Verify Apple Public Key]
-    C --> D{Valid Signature?}
+    A[User Registration] --> B[Email Verification]
+    B --> C[Basic Profile Setup]
+    C --> D{Tier Selection}
     
-    D -->|No| E[Authentication Failed]
-    D -->|Yes| F[Extract Claims]
+    D -->|Free| E[Personal Tier<br/>3 Topic Limit]
+    D -->|$6/$60| F[Professional Tier<br/>Unlimited + AI]
     
-    F --> G[Validate Issuer: appleid.apple.com]
-    G --> H[Check Audience: App Bundle ID]
-    H --> I[Verify Expiration]
-    I --> J[Validate Nonce]
+    E --> G[Desktop App Access]
+    F --> G
     
-    J --> K{All Validations Pass?}
-    K -->|No| E
-    K -->|Yes| L[Extract User Identity]
-    
-    L --> M[Store Secure Credentials]
-    M --> N[Generate Peer Identity]
-    N --> O[Authentication Complete]
-    
-    style A fill:#e3f2fd
-    style O fill:#e8f5e8
-    style E fill:#ffebee
+    G --> H[P2P Network Join]
+    H --> I[Topic Creation/Joining]
 ```
 
-### **Secure Credential Storage**
-
-```javascript
-const { safeStorage } = require('electron');
-
-class SecureCredentialManager {
-  constructor() {
-    this.encryptionAvailable = safeStorage.isEncryptionAvailable();
-  }
-
-  async storeCredentials(credentials) {
-    const data = JSON.stringify({
-      accessToken: credentials.accessToken,
-      refreshToken: credentials.refreshToken,
-      idToken: credentials.idToken,
-      expiresAt: credentials.expiresAt,
-      userInfo: {
-        email: credentials.email,
-        name: credentials.name,
-        appleId: credentials.sub
-      }
-    });
-
-    if (this.encryptionAvailable) {
-      const encrypted = safeStorage.encryptString(data);
-      await this.saveToFile('credentials.enc', encrypted);
-    } else {
-      // Fallback: Basic encryption (development only)
-      const encrypted = Buffer.from(data).toString('base64');
-      await this.saveToFile('credentials.dat', encrypted);
-    }
-  }
-
-  async retrieveCredentials() {
-    try {
-      if (this.encryptionAvailable) {
-        const encrypted = await this.readFromFile('credentials.enc');
-        const decrypted = safeStorage.decryptString(encrypted);
-        return JSON.parse(decrypted);
-      } else {
-        const encoded = await this.readFromFile('credentials.dat');
-        const decoded = Buffer.from(encoded, 'base64').toString();
-        return JSON.parse(decoded);
-      }
-    } catch (error) {
-      console.error('Failed to retrieve credentials:', error);
-      return null;
-    }
-  }
+**User Attributes**:
+```json
+{
+  "sub": "user-uuid",
+  "email": "user@gmail.com",
+  "email_verified": true,
+  "custom:tier": "personal|professional",
+  "custom:topic_limit": 3,
+  "custom:features": ["p2p", "encryption", "ai_summary"],
+  "cognito:groups": ["personal_users", "professional_users"]
 }
 ```
 
-## Peer Identity & Privacy
+### Business Tier
 
-### **Privacy-First User Identity**
+**Authentication Method**: AWS Cognito User Pool (Business)
 
 ```mermaid
-mindmap
-  root((User Privacy))
+sequenceDiagram
+    participant U as Business User
+    participant A as MessagePedia App
+    participant C as AWS Cognito Business Pool
+    participant W as Web/Mobile Content Service
+    participant P as P2P Network
     
-    Apple Sign-In Benefits
-      Hide My Email
-        Relay email service
-        Privacy protection
-        Spam prevention
-      Minimal Data Collection
-        Name (optional)
-        Email (relay)
-        No tracking
-        No analytics
+    Note over U,P: Business Authentication
+    U->>A: Login with work email
+    A->>C: Authenticate (@company.com)
+    C->>A: Return JWT with business claims
+    A->>A: Validate business domain
     
-    MessagePedia Implementation
-      Anonymous Peer IDs
-        Cryptographic hash
-        No personal info
-        Secure identification
-      Local Data Only
-        Messages stay local
-        No server storage
-        P2P direct transfer
-      User Control
-        Delete account
-        Clear local data
-        Revoke access
-    
-    Technical Security
-      End-to-End Encryption
-        DTLS for WebRTC
-        Local key generation
-        No key escrow
-      Token Management
-        JWT validation
-        Secure storage
-        Automatic refresh
-        Revocation support
+    Note over U,P: Multi-Platform Access
+    A->>W: Register for web/mobile access
+    W->>C: Validate JWT tokens
+    W->>A: Provision Content Service access
+    A->>P: Join P2P with business identity
 ```
 
-### **Peer ID Generation**
-
+**Business Domain Validation**:
 ```javascript
-const crypto = require('crypto');
+// Business tier domain validation
+const businessDomains = [
+  "company.com",
+  "enterprise.org", 
+  "business.net"
+];
 
-class PeerIdentityManager {
-  static generatePeerID(appleUserID, deviceInfo) {
-    // Create deterministic but private peer ID
-    const input = `${appleUserID}:${deviceInfo.hostname}:${Date.now()}`;
-    const hash = crypto.createHash('sha256').update(input).digest('hex');
-    
-    return {
-      peerID: `peer-${hash.substring(0, 16)}`,
-      displayName: this.sanitizeDisplayName(deviceInfo.username),
-      publicKey: this.generateKeyPair().publicKey,
-      createdAt: new Date().toISOString(),
-      verified: true // Apple-verified identity
-    };
-  }
-
-  static sanitizeDisplayName(username) {
-    // Remove potentially identifying information
-    return username.replace(/[^a-zA-Z0-9\-_]/g, '').substring(0, 20);
-  }
+function validateBusinessEmail(email) {
+  const domain = email.split('@')[1];
+  return businessDomains.includes(domain);
 }
 ```
 
-## Security Considerations
+### Enterprise Tier
 
-### **OAuth Security Best Practices**
-
-```mermaid
-quadrantChart
-    title Authentication Security Assessment
-    x-axis Low Security Risk --> High Security Risk
-    y-axis Low Implementation Complexity --> High Implementation Complexity
-    
-    quadrant-1 High Security + Complex Implementation
-    quadrant-2 High Security + Simple Implementation (Optimal)
-    quadrant-3 Low Security + Simple Implementation
-    quadrant-4 Low Security + Complex Implementation (Worst)
-    
-    Sign in with Apple: [0.9, 0.3]
-    JWT Token Validation: [0.85, 0.4]
-    Electron SafeStorage: [0.8, 0.2]
-    
-    Custom Auth System: [0.4, 0.9]
-    Username/Password: [0.3, 0.6]
-    Social Media OAuth: [0.6, 0.7]
-```
-
-#### **Security Measures Implemented**:
-
-1. **PKCE Flow**: Proof Key for Code Exchange prevents authorization code interception
-2. **State Parameter**: CSRF protection during OAuth flow
-3. **Nonce Validation**: Replay attack prevention
-4. **JWT Signature Verification**: Apple public key validation
-5. **Secure Storage**: Electron's platform-native encryption
-6. **Token Refresh**: Automatic credential renewal
-7. **Revocation Support**: User can revoke access anytime
-
-### **Threat Mitigation**
-
-| Security Threat | Mitigation Strategy | Implementation |
-|----------------|-------------------|----------------|
-| **Token Interception** | HTTPS + certificate pinning | TLS 1.3 enforcement |
-| **Credential Theft** | Encrypted local storage | Electron safeStorage |
-| **Session Hijacking** | Short-lived tokens + refresh | 1-hour access token TTL |
-| **CSRF Attacks** | State parameter validation | Cryptographic random state |
-| **Replay Attacks** | Nonce + timestamp validation | JWT exp claim checking |
-| **Man-in-Middle** | Certificate pinning | Apple certificate trust |
-
-## User Experience Flow
-
-### **Authentication Journey**
+**Authentication Method**: AWS Cognito + Enterprise SSO Federation
 
 ```mermaid
-journey
-    title User Authentication Experience
-    section First Launch
-      Open MessagePedia: 3: User
-      See welcome screen: 4: User
-      Click Sign in with Apple: 5: User
-      Authenticate with Apple: 4: User
-      Return to MessagePedia: 5: User
-      
-    section Setup Profile
-      Choose display name: 4: User
-      Review privacy settings: 5: User
-      Complete setup: 5: User
-      
-    section Daily Use
-      Auto-login on launch: 5: User
-      Join/create rooms: 5: User
-      Send messages: 5: User
-      Share files: 5: User
-      
-    section Account Management  
-      View account settings: 4: User
-      Manage privacy: 5: User
-      Sign out if needed: 3: User
+architecture-beta
+    group enterprise[Enterprise Authentication]
+    
+    group sso[Enterprise SSO] in enterprise
+    service ad[Active Directory<br/>Corporate LDAP] in sso
+    service saml_idp[SAML Identity Provider<br/>Okta, Azure AD] in sso
+    service oidc_provider[OpenID Connect<br/>Custom IdP] in sso
+    
+    group cognito_enterprise[AWS Cognito Enterprise] in enterprise
+    service federation[Identity Federation<br/>SAML + OIDC] in cognito_enterprise
+    service user_pool[Enterprise User Pool<br/>Federated Users] in cognito_enterprise
+    service admin_groups[Admin Groups<br/>Policy Management] in cognito_enterprise
+    
+    group self_hosted[Self-hosted Components] in enterprise
+    service local_auth[Local Auth Service<br/>On-premise] in self_hosted
+    service admin_console[Admin Console<br/>Policy Management] in self_hosted
+    
+    ad:R --> T:federation
+    saml_idp:B --> T:federation
+    oidc_provider:L --> R:federation
+    
+    federation:B --> T:user_pool
+    user_pool:B --> T:admin_groups
+    
+    admin_groups:B --> T:local_auth
+    local_auth:R --> L:admin_console
 ```
 
-## Implementation Roadmap
+## Corporate vs Personal Identity Separation
 
-### **Authentication Development Timeline**
+### Identity Architecture
 
 ```mermaid
-gantt
-    title Authentication Implementation Plan
-    dateFormat  YYYY-MM-DD
+flowchart TD
+    A[User Identity] --> B{Identity Type}
     
-    section Phase 1: Core OAuth
-    Apple OAuth Integration          :done,    auth1, 2025-08-11, 1w
-    JWT Token Validation            :active,  auth2, 2025-08-18, 1w
-    Secure Credential Storage       :         auth3, 2025-08-25, 1w
+    B -->|Personal| C[Personal AWS Cognito Pool]
+    B -->|Corporate| D[Business AWS Cognito Pool]
+    B -->|Enterprise| E[Federated Enterprise Identity]
     
-    section Phase 2: Peer Identity
-    Peer ID Generation              :         peer1, 2025-08-25, 1w
-    Identity Verification           :         peer2, 2025-09-01, 1w
-    Privacy Settings UI             :         peer3, 2025-09-08, 1w
+    C --> F[Personal Topics Only]
+    D --> G[Business Topics + Audit]
+    E --> H[Enterprise Topics + Admin]
     
-    section Phase 3: Integration
-    WebRTC Identity Integration     :         int1, 2025-09-08, 1w
-    Signaling Server Auth           :         int2, 2025-09-15, 1w
-    End-to-End Testing              :         int3, 2025-09-22, 1w
+    F --> I[Personal Device Registration]
+    G --> J[Managed Device Registration]
+    H --> K[Enterprise Device Management]
     
-    section Phase 4: Production
-    Security Audit                  :         prod1, 2025-09-22, 1w
-    Performance Optimization        :         prod2, 2025-09-29, 1w
-    Documentation & Deployment      :         prod3, 2025-10-06, 1w
+    I --> L[Basic P2P Access]
+    J --> M[Web/Mobile + P2P Access]
+    K --> N[Full Platform Access]
 ```
 
-## Testing Strategy
-
-### **Authentication Test Coverage**
-
-- [x] **OAuth Flow Testing**: Complete Apple Sign-In simulation
-- [x] **JWT Validation**: Token signature and claims verification  
-- [x] **Secure Storage**: Encryption/decryption validation
-- [ ] **Error Handling**: Network failures, invalid tokens
-- [ ] **Privacy Compliance**: Data collection audit
-- [ ] **Cross-Platform**: macOS, Windows, Linux compatibility
-
-### **Integration Testing**
+### Topic Access Control
 
 ```mermaid
-flowchart LR
-    A[Unit Tests<br/>🧪 OAuth Components] --> B[Integration Tests<br/>🔗 Full Auth Flow]
-    B --> C[Security Tests<br/>🛡️ Penetration Testing]
-    C --> D[Privacy Tests<br/>🔒 Data Collection Audit]
-    D --> E[Performance Tests<br/>⚡ Token Operations]
-    E --> F[Cross-Platform Tests<br/>💻 Multi-OS Validation]
+sequenceDiagram
+    participant U as User
+    participant A as App
+    participant AC as Access Control
+    participant T as Topic
     
-    style A fill:#e3f2fd
-    style F fill:#e8f5e8
+    Note over U,T: Topic Access Validation
+    U->>A: Request topic access
+    A->>AC: Validate user identity + tier
+    AC->>AC: Check topic permissions
+    AC->>AC: Validate identity type (personal/corporate)
+    
+    Note over U,T: Access Decision
+    alt Corporate Topic + Personal Identity
+        AC->>A: Access Denied (Identity Mismatch)
+    else Personal Topic + Corporate Identity  
+        AC->>A: Access Denied (Policy Violation)
+    else Matching Identity Types
+        AC->>T: Grant access with role
+        T->>A: Topic content available
+    end
 ```
 
-## Conclusion
+## Security Implementation
 
-**Sign in with Apple** provides the optimal authentication solution for MessagePedia:
+### Token Management
 
-- **✅ Enhanced Privacy**: Minimal data collection with optional email hiding
-- **✅ Superior Security**: Industry-standard OAuth 2.0 with Apple's security infrastructure  
-- **✅ User Experience**: Fast, familiar authentication with biometric support
-- **✅ Developer Benefits**: Reduced authentication complexity and compliance burden
-- **✅ Cross-Platform**: Works across macOS, iOS, and web platforms
+```mermaid
+flowchart TD
+    A[AWS Cognito JWT] --> B[Token Validation]
+    B --> C[Claims Extraction]
+    C --> D[Tier Determination]
+    
+    D --> E{Token Storage}
+    E -->|Desktop| F[Electron SafeStorage<br/>Encrypted Keychain]
+    E -->|Web| G[Secure HTTP-Only Cookies<br/>SameSite Strict]
+    E -->|Mobile| H[Platform Keystore<br/>iOS/Android Secure]
+    
+    F --> I[Local Token Refresh]
+    G --> I
+    H --> I
+    
+    I --> J[Background Refresh<br/>Seamless Experience]
+```
 
-The implementation leverages Electron's native security features while maintaining compatibility with MessagePedia's P2P architecture, providing a secure foundation for decentralized messaging.
+### End-to-End Encryption Integration
+
+```mermaid
+sequenceDiagram
+    participant A as Alice (Authenticated)
+    participant E as Encryption Layer
+    participant P as P2P Channel
+    participant B as Bob (Authenticated)
+    
+    Note over A,B: Authenticated P2P with E2E Encryption
+    A->>E: Content + User Identity Claims
+    E->>E: Generate per-topic encryption keys
+    E->>P: Encrypted content + authenticated metadata
+    P->>B: Encrypted transmission
+    B->>E: Decrypt with topic keys
+    E->>B: Plain content + verified sender identity
+```
+
+## Enterprise Admin Console Authentication
+
+### Admin Role Architecture
+
+```mermaid
+architecture-beta
+    group admin[Enterprise Admin Console]
+    
+    group roles[Admin Roles] in admin
+    service super_admin[Super Admin<br/>Full System Control] in roles
+    service it_admin[IT Admin<br/>User Management] in roles
+    service security_admin[Security Admin<br/>Policy Management] in roles
+    service audit_admin[Audit Admin<br/>Compliance Review] in roles
+    
+    group permissions[Admin Permissions] in admin
+    service user_mgmt[User Management<br/>Create/Delete/Modify] in permissions
+    service policy_mgmt[Policy Management<br/>Security Policies] in permissions
+    service audit_access[Audit Access<br/>Log Review] in permissions
+    service system_config[System Config<br/>Enterprise Settings] in permissions
+    
+    super_admin:R --> T:user_mgmt
+    it_admin:B --> T:user_mgmt
+    security_admin:B --> T:policy_mgmt
+    audit_admin:B --> T:audit_access
+    
+    user_mgmt:R --> L:system_config
+    policy_mgmt:B --> T:audit_access
+```
+
+### Admin Authentication Flow
+
+```mermaid
+sequenceDiagram
+    participant A as Admin User
+    participant AC as Admin Console
+    participant C as AWS Cognito
+    participant M as MFA Provider
+    participant AS as Admin Service
+    
+    Note over A,AS: High-Security Admin Login
+    A->>AC: Access admin console
+    AC->>C: Require admin authentication
+    C->>A: Request credentials + MFA
+    A->>M: Provide MFA token
+    M->>C: Validate MFA
+    C->>AC: Admin JWT with elevated claims
+    AC->>AS: Access admin functions
+    AS->>AC: Admin dashboard + controls
+```
+
+## Self-Hosting Authentication
+
+### On-Premise Identity Integration
+
+```mermaid
+architecture-beta
+    group self_hosted[Self-hosted Enterprise]
+    
+    group identity[Identity Services] in self_hosted
+    service local_cognito[Local AWS Cognito<br/>Enterprise Account] in identity
+    service ldap_connector[LDAP Connector<br/>Active Directory] in identity
+    service saml_bridge[SAML Bridge<br/>Enterprise SSO] in identity
+    
+    group services[MessagePedia Services] in self_hosted
+    service auth_service[Auth Service<br/>Local Validation] in services
+    service p2p_relay[P2P Relay<br/>Internal Network] in services
+    service admin_service[Admin Service<br/>Policy Enforcement] in services
+    
+    group network[Network Layer] in self_hosted
+    service firewall[Corporate Firewall<br/>Network Security] in network
+    service vpn[VPN Gateway<br/>Remote Access] in network
+    
+    local_cognito:R --> T:auth_service
+    ldap_connector:B --> T:auth_service
+    saml_bridge:L --> R:auth_service
+    
+    auth_service:B --> T:p2p_relay
+    p2p_relay:B --> T:admin_service
+    
+    admin_service:B --> T:firewall
+    firewall:R --> L:vpn
+```
+
+## Privacy and Compliance
+
+### Data Minimization
+
+```mermaid
+flowchart TD
+    A[User Authentication] --> B[Extract Minimal Claims]
+    B --> C{Required Data Only}
+    
+    C -->|Identity| D[User ID + Email]
+    C -->|Authorization| E[Tier + Groups]
+    C -->|Audit| F[Login Time + Location]
+    
+    D --> G[P2P Identity Verification]
+    E --> H[Feature Access Control]
+    F --> I[Compliance Logging]
+    
+    G --> J[Zero-Knowledge P2P]
+    H --> J
+    I --> K[Audit Trail Storage]
+```
+
+### GDPR Compliance
+
+- **Right to Access**: Export user authentication data
+- **Right to Rectification**: Update user profile information
+- **Right to Erasure**: Delete user accounts and associated data
+- **Data Portability**: Export user data in machine-readable format
+- **Consent Management**: Explicit consent for data processing
+
+## Implementation Considerations
+
+### Technical Requirements
+
+1. **AWS Cognito Setup**: Multi-pool architecture for different tiers
+2. **JWT Validation**: Secure token verification across all services
+3. **Session Management**: Seamless token refresh and rotation
+4. **MFA Integration**: Multi-factor authentication for enterprise tiers
+5. **SSO Federation**: SAML/OIDC integration for enterprise customers
+
+### Security Best Practices
+
+1. **Token Security**: Short-lived access tokens, secure refresh tokens
+2. **Transport Security**: TLS 1.3 for all authentication traffic
+3. **Storage Security**: Platform-native secure storage for tokens
+4. **Audit Logging**: Comprehensive authentication event logging
+5. **Rate Limiting**: Protection against brute force attacks
+
+## Next Steps for P Phase
+
+1. **AWS Cognito Configuration**: Set up multi-tier user pools
+2. **SDK Integration**: Implement AWS Cognito SDKs in Electron/Web/Mobile
+3. **Token Management**: Secure storage and refresh mechanisms
+4. **Admin Console**: Enterprise management interface development
+5. **SSO Integration**: SAML/OIDC federation for enterprise customers
 
 ---
 
-**References:**
-- [Sign in with Apple Documentation](https://developer.apple.com/documentation/sign_in_with_apple)
-- [OAuth 2.0 Security Best Practices](https://tools.ietf.org/html/draft-ietf-oauth-security-topics)
-- [Electron Security Guidelines](https://www.electronjs.org/docs/latest/tutorial/security)
+**Authentication Status**: Comprehensive multi-tier strategy defined  
+**Next Phase**: P (Planning) - Detailed implementation planning and AWS setup

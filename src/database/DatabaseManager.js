@@ -420,6 +420,112 @@ class DatabaseManager {
     }
 
     /**
+     * Store file metadata
+     */
+    async storeFile(file) {
+        return new Promise((resolve, reject) => {
+            const sql = `INSERT OR REPLACE INTO files 
+                         (id, name, size, mime_type, topic_id, shared_by_peer_id, chunk_count, chunk_size, created_at)
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+            
+            const timestamp = Math.floor(Date.now() / 1000);
+            const chunkSize = 64 * 1024; // 64KB chunks
+            const chunkCount = Math.ceil(file.size / chunkSize);
+            const values = [
+                file.id,
+                file.name,
+                file.size,
+                file.mimeType,
+                file.topicId,
+                file.senderPeerId,
+                chunkCount,
+                chunkSize,
+                timestamp
+            ];
+            
+            this.db.run(sql, values, function(err) {
+                if (err) {
+                    console.error('❌ Failed to store file:', err);
+                    reject(err);
+                } else {
+                    console.log(`✅ File stored: ${file.name}`);
+                    resolve({ id: file.id, changes: this.changes });
+                }
+            });
+        });
+    }
+
+    /**
+     * Store file chunk data
+     */
+    async storeFileChunk(chunk) {
+        return new Promise((resolve, reject) => {
+            const sql = `INSERT OR REPLACE INTO file_chunks 
+                         (file_id, chunk_index, chunk_data, chunk_size, created_at)
+                         VALUES (?, ?, ?, ?, ?)`;
+            
+            const timestamp = Math.floor(Date.now() / 1000);
+            const values = [
+                chunk.fileId,
+                chunk.chunkIndex,
+                chunk.chunkData,
+                chunk.chunkSize,
+                timestamp
+            ];
+            
+            this.db.run(sql, values, function(err) {
+                if (err) {
+                    console.error('❌ Failed to store file chunk:', err);
+                    reject(err);
+                } else {
+                    resolve({ chunkIndex: chunk.chunkIndex, changes: this.changes });
+                }
+            });
+        });
+    }
+
+    /**
+     * Get file metadata by ID
+     */
+    async getFile(fileId) {
+        return new Promise((resolve, reject) => {
+            const sql = `SELECT f.*, p.display_name as sender_name 
+                         FROM files f 
+                         LEFT JOIN peers p ON f.shared_by_peer_id = p.id 
+                         WHERE f.id = ?`;
+            
+            this.db.get(sql, [fileId], (err, row) => {
+                if (err) {
+                    console.error('❌ Failed to get file:', err);
+                    reject(err);
+                } else {
+                    resolve(row);
+                }
+            });
+        });
+    }
+
+    /**
+     * Get file chunks for reassembly
+     */
+    async getFileChunks(fileId) {
+        return new Promise((resolve, reject) => {
+            const sql = `SELECT * FROM file_chunks 
+                         WHERE file_id = ? 
+                         ORDER BY chunk_index ASC`;
+            
+            this.db.all(sql, [fileId], (err, rows) => {
+                if (err) {
+                    console.error('❌ Failed to get file chunks:', err);
+                    reject(err);
+                } else {
+                    resolve(rows);
+                }
+            });
+        });
+    }
+
+    /**
      * Close database connection
      */
     close() {

@@ -15,13 +15,17 @@ function createWindow() {
     title: `MessagePedia - ${PEER_NAME}`,
     webPreferences: {
       nodeIntegration: true,
-      contextIsolation: false,
-      additionalArguments: [
-        `--peer-id=${PEER_ID}`,
-        `--peer-name=${PEER_NAME}`,
-        `--db-path=${DB_PATH}`
-      ]
+      contextIsolation: false
     }
+  });
+  
+  // Pass environment variables to renderer via global
+  mainWindow.webContents.on('dom-ready', () => {
+    mainWindow.webContents.executeJavaScript(`
+      window.MESSAGEPEDIA_PEER_ID = '${PEER_ID}';
+      window.MESSAGEPEDIA_PEER_NAME = '${PEER_NAME}';
+      window.MESSAGEPEDIA_DB_PATH = '${DB_PATH}';
+    `);
   });
 
   // Load the renderer

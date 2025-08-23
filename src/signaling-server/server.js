@@ -27,7 +27,7 @@ io.on('connection', (socket) => {
   console.log('Peer connected:', socket.id);
   
   socket.on('join-room', (roomId) => {
-    console.log(\`Peer \${socket.id} joining room \${roomId}\`);
+    console.log('Peer ' + socket.id + ' joining room ' + roomId);
     socket.join(roomId);
     
     if (!rooms.has(roomId)) {
@@ -43,7 +43,7 @@ io.on('connection', (socket) => {
   });
   
   socket.on('leave-room', (roomId) => {
-    console.log(\`Peer \${socket.id} leaving room \${roomId}\`);
+    console.log('Peer ' + socket.id + ' leaving room ' + roomId);
     socket.leave(roomId);
     
     if (rooms.has(roomId)) {
@@ -60,7 +60,7 @@ io.on('connection', (socket) => {
   });
   
   socket.on('webrtc-signal', (data) => {
-    console.log(\`Relaying WebRTC signal from \${socket.id} to \${data.targetPeer}\`);
+    console.log('Relaying WebRTC signal from ' + socket.id + ' to ' + data.targetPeer);
     socket.to(data.targetPeer).emit('webrtc-signal', {
       fromPeer: socket.id,
       signal: data.signal,
@@ -92,7 +92,7 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 8080;
 server.listen(PORT, () => {
-  console.log(\`MessagePedia Signaling Server running on port \${PORT}\`);
+  console.log('MessagePedia Signaling Server running on port ' + PORT);
   console.log('Rooms:', rooms.size);
   console.log('Connected peers:', peers.size);
 });

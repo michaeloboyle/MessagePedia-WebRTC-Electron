@@ -4,7 +4,7 @@
 **Repository**: MessagePedia-WebRTC-Electron  
 **Purpose**: Modern WebRTC + Electron replacement for legacy JXTA-based P2P messaging system  
 **Location**: `/Users/michaeloboyle/Documents/GitHub/MessagePedia-WebRTC-Electron`
-
+MmvEG7Sqsaj0JGHJTK2_pvhHJyuZEwvQEHsbIVrJFAg
 ## Development Guidelines
 
 ### Authentication Integration

@@ -3,10 +3,10 @@
 
 console.log('MessagePedia WebRTC + Electron Renderer Process - Database Connected!');
 
-// Get peer configuration from environment/process args
-const PEER_ID = process.env.MESSAGEPEDIA_PEER_ID || 'peer-default-001';
-const PEER_NAME = process.env.MESSAGEPEDIA_PEER_NAME || 'Default User';
-const DB_PATH = process.env.MESSAGEPEDIA_DB_PATH || './messagepedia.db';
+// Get peer configuration from window globals (set by main process)
+const PEER_ID = window.MESSAGEPEDIA_PEER_ID || process.env.MESSAGEPEDIA_PEER_ID || 'peer-default-001';
+const PEER_NAME = window.MESSAGEPEDIA_PEER_NAME || process.env.MESSAGEPEDIA_PEER_NAME || 'Default User';
+const DB_PATH = window.MESSAGEPEDIA_DB_PATH || process.env.MESSAGEPEDIA_DB_PATH || './messagepedia.db';
 
 const DatabaseManager = require('../database/DatabaseManager');
 const SimpleP2PBridge = require('../services/SimpleP2PBridge');
@@ -21,6 +21,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Initialize database connection
         await dbManager.initialize();
         console.log('✅ Database connected successfully!');
+        
+        // Ensure current peer exists in database
+        await dbManager.storePeer({
+            id: PEER_ID,
+            displayName: PEER_NAME,
+            isOnline: true,
+            reputationScore: 100
+        });
+        
+        // Ensure basic topics exist in database
+        await dbManager.storeTopic({
+            id: 'general',
+            name: 'General Discussion',
+            description: 'General chat for all topics',
+            isPrivate: false,
+            creator: PEER_ID
+        });
+        
+        await dbManager.storeTopic({
+            id: 'tech',
+            name: 'Tech Talk', 
+            description: 'Technical discussions',
+            isPrivate: false,
+            creator: PEER_ID
+        });
         
         // Update connection status with peer info
         const statusEl = document.getElementById('connection-status');
@@ -39,6 +64,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         // Setup message input handler
         setupMessageInput();
+        
+        // Setup file transfer functionality
+        setupFileTransfer();
         
     } catch (error) {
         console.error('❌ Database connection failed:', error);
@@ -106,9 +134,12 @@ async function loadTopics() {
             topicsSidebar.appendChild(topicEl);
         });
         
-        // Auto-select first topic
-        if (demoTopics.length > 0) {
-            await selectTopic(demoTopics[0].id, demoTopics[0].name);
+        // Restore last selected topic, or default to first topic
+        const lastSelectedTopic = localStorage.getItem('messagepedia-last-topic') || demoTopics[0]?.name;
+        const topicToSelect = demoTopics.find(t => t.name === lastSelectedTopic) || demoTopics[0];
+        
+        if (topicToSelect) {
+            await selectTopic(topicToSelect.id, topicToSelect.name);
         }
         
         console.log(`✅ Loaded ${demoTopics.length} topics`);
@@ -118,8 +149,11 @@ async function loadTopics() {
 }
 
 async function selectTopic(topicId, topicName) {
-    currentTopic = topicId;
+    currentTopic = topicName; // Store the display name, not the ID
     console.log(`📋 Selected topic: ${topicName}`);
+    
+    // Save last selected topic
+    localStorage.setItem('messagepedia-last-topic', topicName);
     
     // Update topic selection UI
     document.querySelectorAll('.topic-item').forEach(el => {
@@ -128,11 +162,20 @@ async function selectTopic(topicId, topicName) {
     event?.target.closest('.topic-item')?.classList.add('selected');
     
     // Load messages for this topic
-    await loadMessages(topicId);
+    await loadMessages(topicName);
 }
 
-async function loadMessages(topicId) {
+async function loadMessages(topicName) {
     try {
+        // Handle no topic selected
+        if (!topicName) {
+            console.log('🔍 No topic selected for loading messages');
+            return;
+        }
+        
+        // Convert display name to database ID
+        const topicId = topicName === 'General Discussion' ? 'general' : 'tech';
+        console.log(`🔍 Loading messages for topic: ${topicName} -> ${topicId}`);
         const messages = await dbManager.getMessagesForTopic(topicId);
         const messagesEl = document.getElementById('messages');
         
@@ -147,9 +190,11 @@ async function loadMessages(topicId) {
             const messageEl = document.createElement('div');
             messageEl.className = 'message';
             const timestamp = new Date(message.timestamp).toLocaleTimeString();
+            // Use PEER_NAME if this is our message, otherwise use sender_name
+            const displayName = message.sender_peer_id === PEER_ID ? PEER_NAME : (message.sender_name || message.sender_peer_id);
             messageEl.innerHTML = `
                 <div class="message-header">
-                    <strong>${message.sender_name || message.sender_peer_id}</strong>
+                    <strong>${displayName}</strong>
                     <span class="timestamp">${timestamp}</span>
                 </div>
                 <div class="message-content">${message.content}</div>
@@ -178,8 +223,8 @@ function setupMessageInput() {
             // Store message in database
             const message = {
                 id: `msg-${Date.now()}`,
-                topicId: currentTopic,
-                sender: PEER_ID, // Current user's peer ID
+                topicId: currentTopic === 'General Discussion' ? 'general' : 'tech', // Map display name to DB ID
+                sender: PEER_ID, // Use the current user's peer ID
                 content: content,
                 timestamp: Date.now()
             };
@@ -257,6 +302,36 @@ function setupP2PBridge() {
         }
     });
     
+    // Handle incoming file offers from other peers
+    p2pBridge.on('fileOfferReceived', async (fileOffer) => {
+        try {
+            console.log(`📎 File offer received: ${fileOffer.fileName} from ${fileOffer.senderName}`);
+            
+            // Show file offer in messages as a notification from the sender
+            const offerMessage = {
+                id: `offer-${Date.now()}`,
+                topicId: fileOffer.topicId,
+                sender: fileOffer.sender, // Use actual sender peer ID
+                content: `📎 Shared file: ${fileOffer.fileName} (${(fileOffer.fileSize / 1024).toFixed(1)}KB) - Click to download`,
+                messageType: 'file_offer',
+                fileId: fileOffer.fileId,
+                timestamp: Date.now()
+            };
+            
+            await dbManager.storeMessage(offerMessage);
+            
+            // If we're viewing the same topic, refresh messages
+            if (currentTopic === fileOffer.topicId || 
+                (currentTopic === 'General Discussion' && fileOffer.topicId === 'general') ||
+                (currentTopic === 'Tech Talk' && fileOffer.topicId === 'tech')) {
+                await loadMessages(currentTopic);
+            }
+            
+        } catch (error) {
+            console.error('❌ Failed to handle file offer:', error);
+        }
+    });
+    
     // Monitor P2P connection status
     setInterval(() => {
         const status = p2pBridge.getConnectionStatus();
@@ -266,6 +341,111 @@ function setupP2PBridge() {
     }, 10000); // Check every 10 seconds
     
     console.log('🌐 P2P Bridge initialized for real-time messaging');
+}
+
+function setupFileTransfer() {
+    const fileButton = document.getElementById('file-button');
+    const fileInput = document.getElementById('file-input');
+    const dropZone = document.getElementById('file-drop-zone');
+    const messagesArea = document.getElementById('messages-area');
+    
+    // File button click handler
+    fileButton.addEventListener('click', () => {
+        fileInput.click();
+    });
+    
+    // File input change handler
+    fileInput.addEventListener('change', async (e) => {
+        const files = Array.from(e.target.files);
+        for (const file of files) {
+            await handleFileShare(file);
+        }
+        fileInput.value = ''; // Reset input
+    });
+    
+    // Drag and drop handlers
+    messagesArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.style.display = 'block';
+        dropZone.style.background = '#e8f5e8';
+    });
+    
+    messagesArea.addEventListener('dragleave', (e) => {
+        if (!messagesArea.contains(e.relatedTarget)) {
+            dropZone.style.display = 'none';
+        }
+    });
+    
+    messagesArea.addEventListener('drop', async (e) => {
+        e.preventDefault();
+        dropZone.style.display = 'none';
+        
+        const files = Array.from(e.dataTransfer.files);
+        for (const file of files) {
+            await handleFileShare(file);
+        }
+    });
+}
+
+async function handleFileShare(file) {
+    if (!currentTopic) {
+        alert('Please select a topic first');
+        return;
+    }
+    
+    try {
+        console.log(`📎 Sharing file: ${file.name} (${file.size} bytes)`);
+        
+        // Store file metadata in database
+        const fileId = `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const fileRecord = {
+            id: fileId,
+            name: file.name,
+            size: file.size,
+            mimeType: file.type,
+            topicId: currentTopic === 'General Discussion' ? 'general' : 'tech',
+            senderPeerId: PEER_ID,
+            uploadTimestamp: Date.now()
+        };
+        
+        await dbManager.storeFile(fileRecord);
+        
+        console.log(`✅ File metadata stored for: ${file.name}`);
+        
+        // Create file share message
+        const shareMessage = {
+            id: `msg-${Date.now()}`,
+            topicId: currentTopic === 'General Discussion' ? 'general' : 'tech',
+            sender: PEER_ID,
+            content: `📎 Shared file: ${file.name} (${(file.size / 1024).toFixed(1)}KB)`,
+            messageType: 'file_share',
+            fileId: fileId,
+            timestamp: Date.now()
+        };
+        
+        await dbManager.storeMessage(shareMessage);
+        
+        // Broadcast file offer to peers
+        p2pBridge.broadcastFileOffer({
+            fileId: fileId,
+            fileName: file.name,
+            fileSize: file.size,
+            mimeType: file.type,
+            sender: PEER_ID,
+            senderName: PEER_NAME,
+            topicId: shareMessage.topicId,
+            totalChunks: totalChunks
+        });
+        
+        // Reload messages to show the file share
+        await loadMessages(currentTopic);
+        
+        console.log(`✅ File shared successfully: ${file.name}`);
+        
+    } catch (error) {
+        console.error('❌ Failed to share file:', error);
+        alert(`Failed to share file: ${error.message}`);
+    }
 }
 
 // Cleanup on page unload

@@ -97,8 +97,13 @@ class SimpleP2PBridge extends EventEmitter {
             newMessages.forEach(message => {
                 // Don't process our own messages
                 if (message.fromPeer !== this.peerId) {
-                    console.log(`📥 P2P Received: ${message.content} (from ${message.fromPeer})`);
-                    this.emit('messageReceived', message);
+                    if (message.type === 'file_offer') {
+                        console.log(`📎 P2P File Offer Received: ${message.fileOffer.fileName} (from ${message.fromPeer})`);
+                        this.emit('fileOfferReceived', message.fileOffer);
+                    } else {
+                        console.log(`📥 P2P Received: ${message.content} (from ${message.fromPeer})`);
+                        this.emit('messageReceived', message);
+                    }
                 }
             });
             
@@ -119,6 +124,29 @@ class SimpleP2PBridge extends EventEmitter {
         } catch (error) {
             console.error('❌ Failed to read bridge messages:', error);
             return [];
+        }
+    }
+    
+    /**
+     * Broadcast file offer to other peers
+     */
+    broadcastFileOffer(fileOffer) {
+        try {
+            const messages = this.getMessagesFromBridge();
+            const fileOfferMessage = {
+                type: 'file_offer',
+                fromPeer: this.peerId,
+                fileOffer: fileOffer,
+                timestamp: Date.now()
+            };
+            
+            messages.push(fileOfferMessage);
+            
+            fs.writeFileSync(this.messageBridgeFile, JSON.stringify(messages, null, 2));
+            console.log(`📎 P2P File Offer: ${fileOffer.fileName} (from ${this.peerId})`);
+            
+        } catch (error) {
+            console.error('❌ Failed to broadcast file offer:', error);
         }
     }
     
