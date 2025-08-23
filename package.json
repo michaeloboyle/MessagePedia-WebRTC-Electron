@@ -5,13 +5,12 @@
   "main": "src/main/main.js",
   "scripts": {
     "start": "electron .",
-    "dev": "concurrently \"npm run dev:signaling\" \"npm run dev:electron\"",
+    "dev": "NODE_ENV=development electron . --enable-logging",
     "dev:electron": "NODE_ENV=development electron . --enable-logging",
-    "dev:signaling": "cd src/signaling-server && npm run dev",
-    "test": "jest --coverage",
-    "test:watch": "jest --watch",
-    "build": "webpack --mode production",
-    "lint": "eslint src/ tests/",
+    "test:bdd": "cucumber-js features/",
+    "lint": "eslint src/ --ext .js",
+    "build": "electron-builder",
+    "clean": "rimraf *.db alice.log bob.log",
     "db:init": "node -e \"const db = require('./src/database/DatabaseManager'); new db().initialize().then(() => console.log('Database initialized'))\"",
     "db:stats": "node -e \"const db = require('./src/database/DatabaseManager'); const dbManager = new db(); dbManager.initialize().then(async () => { console.log(await dbManager.getStats()); dbManager.close(); })\""
   },
@@ -25,17 +24,21 @@
   "author": "Michael O'Boyle <michael@oboyle.co>",
   "license": "MIT",
   "devDependencies": {
-    "@types/jest": "^29.5.5",
-    "@types/node": "^20.6.3",
-    "concurrently": "^7.6.0",
-    "electron": "^22.0.0",
-    "jest": "^29.7.0",
-    "typescript": "^5.2.2"
+    "@cucumber/cucumber": "^12.2.0",
+    "electron": "^28.3.2",
+    "electron-builder": "^24.6.4",
+    "eslint": "^8.50.0",
+    "rimraf": "^5.0.5"
   },
   "dependencies": {
-    "events": "^3.3.0",
-    "socket.io-client": "^4.7.4",
-    "sqlite3": "^5.1.7",
-    "uuid": "^9.0.1"
+    "sqlite3": "^5.1.6",
+    "ws": "^8.14.2"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/michaeloboyle/messagepedia-webrtc-electron.git"
   }
 }
